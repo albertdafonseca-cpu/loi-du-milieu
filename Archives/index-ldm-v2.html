@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Loi du Milieu">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<script>
+  if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{});
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  // Bloquer zoom multi-touch
+  document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+</script>
+<title>La Loi du Milieu</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Bebas+Neue&family=Playfair+Display:wght@700&display=swap');
+
+@media screen and (orientation: landscape) {
+  body { transform: rotate(90deg); transform-origin: left top; width: 100vh; height: 100vw; overflow: hidden; position: absolute; top: 0; left: 100%; }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html, body {
+  height: 100%; min-height: 100vh;
+  background: #2e2418 !important;
+  color: #ffffff !important;
+  font-family: 'Cinzel', Georgia, serif;
+  overflow-x: hidden;
+  touch-action: manipulation;
+}
+
+:root {
+  --bg:      #2e2418;
+  --bg2:     #261e13;
+  --surface: #3d3020;
+  --surface2:#483828;
+  --gold:    #f0c040;
+  --gold2:   #ffe070;
+  --border:  rgba(240,192,64,0.28);
+  --muted:   #c8aa78;
+  --red:     #e06010;
+  --green:   #1a80c0;
+  --c1: #5c2a0e; --c2: #0e3d5c; --c3: #2d4a1e;
+  --c4: #4a1e4a; --c5: #5c4200; --c6: #1e3d40;
+}
+body.day-mode {
+  --bg:      #f5f0e8;
+  --bg2:     #ede6d8;
+  --surface: #ddd5c0;
+  --surface2:#cfc6ae;
+  --gold:    #7a5500;
+  --gold2:   #9e7000;
+  --border:  rgba(120,85,0,0.35);
+  --muted:   #5a4220;
+  --red:     #b03800;
+  --green:   #004f8a;
+  /* Cartes mode jour — teintes claires distinctes, daltonien-safe */
+  --c1: #e8c8a0; --c2: #a8c8e8; --c3: #b8d8a8;
+  --c4: #d8b8d8; --c5: #e8d888; --c6: #a8d0d8;
+}
+body.day-mode { background: #f5f0e8 !important; color: #2e2418 !important; font-weight: 700; }
+
+/* Setup : corriger les bordures/fonds hardcodés en blanc */
+body.day-mode .lt-pick { border-color: rgba(0,0,0,0.14); }
+body.day-mode .lt-pick.on { border-color: var(--gold); background: var(--surface2); }
+body.day-mode .lt-check { border-color: var(--muted); }
+body.day-mode .name-row { border-color: rgba(0,0,0,0.12); }
+body.day-mode .name-input {
+  color: #000; font-weight: 700;
+  background: rgba(0,0,0,0.06);
+  border-color: rgba(0,0,0,0.2);
+}
+body.day-mode .name-input::placeholder { color: var(--muted); }
+body.day-mode .go-btn { color: #fff; font-weight: 900; }
+body.day-mode .brand-title { color: #000; font-weight: 900; }
+body.day-mode .brand-sub { font-weight: 900; }
+body.day-mode .section-label { font-weight: 900; }
+body.day-mode .lt-pick-role { font-weight: 900; }
+body.day-mode .names-sub { font-weight: 900; }
+body.day-mode .name-lt-role { font-weight: 900; }
+body.day-mode .lt-pick-name { color: #000; font-weight: 900; }
+body.day-mode .lt-pick-role { color: #000; font-weight: 700; }
+body.day-mode .names-title { color: #000; font-weight: 900; }
+body.day-mode .names-sub { color: #000; font-weight: 700; }
+body.day-mode .name-lt { color: #000; font-weight: 900; }
+body.day-mode .name-lt-role { color: #000; font-weight: 700; }
+body.day-mode .game-header-title { color: #000; font-weight: 900; }
+body.day-mode #bar { background: var(--bg2); border-color: var(--border); }
+body.day-mode .bar-btn { background: var(--surface); color: #000; border-color: rgba(0,0,0,0.15); font-weight: 700; }
+body.day-mode .bar-btn.danger { color: #000; }
+body.day-mode .bar-btn.rotate-btn { color: #000; }
+
+/* Cartes mode jour — mêmes polices/tailles que mode nuit, couleurs sombres */
+body.day-mode .pcard { border-color: rgba(0,0,0,0.2); }
+body.day-mode .pname   { color: #000; text-shadow: none; font-family: 'Bebas Neue', sans-serif; font-size: 7vmin; font-weight: 900; }
+body.day-mode .prole   { color: #000; font-family: 'Cinzel', serif; font-size: 4.5vmin; font-weight: 700; }
+body.day-mode .pplayer { color: #000; text-shadow: none; font-family: Georgia, serif; font-style: italic; font-weight: 900; font-size: 8vmin; }
+body.day-mode .score   { color: #000; text-shadow: none; font-size: 12vmin; font-weight: 900; }
+body.day-mode .tap-sign-minus,
+body.day-mode .tap-sign-plus { color: rgba(0,0,0,0.55); text-shadow: none; font-weight: 900; }
+body.day-mode .score.low  { color: #7a4800; }
+body.day-mode .score.crit { color: #8b1a00; }
+body.day-mode .tap-sign-minus,
+body.day-mode .tap-sign-plus { color: rgba(0,0,0,0.55); text-shadow: none; }
+body.day-mode .delta-flash { color: #111; }
+body.day-mode .card-inner::before { opacity: 0.2; }
+
+/* Day/night toggle */
+.theme-toggle {
+  position: absolute; top: 16px; right: 20px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 6px 14px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.1em;
+  color: var(--muted); cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 6px;
+}
+.theme-toggle:active { transform: scale(0.97); }
+
+/* ══ SETUP ══ */
+#setup {
+  display: flex; flex-direction: column; align-items: center;
+  min-height: 100vh; padding: 52px 24px 72px; overflow-y: auto;
+  position: relative;
+}
+.brand { text-align: center; margin-bottom: 20px; }
+.brand-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(44px,12vw,64px);
+  letter-spacing: 0.12em; color: var(--gold); line-height: 0.95;
+}
+.brand-rule { display: flex; align-items: center; gap: 12px; margin: 12px auto 8px; max-width: 200px; }
+.brand-rule::before, .brand-rule::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0.4;
+}
+.brand-rule-dot { color: var(--gold); font-size: 8px; opacity: 0.7; }
+.brand-sub { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 0.3em; color: var(--muted); text-transform: uppercase; font-weight: 600; }
+.section-label {
+  font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 0.2em; color: var(--muted);
+  text-transform: uppercase; font-weight: 600; margin-bottom: 14px;
+  align-self: flex-start; max-width: 400px; width: 100%;
+}
+.lt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; width: 100%; max-width: 440px; margin-bottom: 28px; }
+.lt-pick {
+  padding: 12px 10px 10px; background: var(--surface);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 12px; text-align: center; cursor: pointer;
+  transition: all 0.18s; user-select: none; -webkit-user-select: none;
+}
+.lt-pick.on { border-color: rgba(240,192,64,0.45); background: var(--surface2); }
+.lt-check {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 1.5px solid var(--muted); margin: 0 auto 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: transparent; transition: all 0.18s;
+}
+.lt-pick.on .lt-check { background: var(--gold); border-color: var(--gold); color: var(--bg); }
+.lt-pick-name { font-family: 'Bebas Neue', sans-serif; font-size: 19px; letter-spacing: 0.04em; color: var(--gold); line-height: 1.1; }
+.lt-pick-role { font-size: 13px; color: var(--muted); margin-top: 3px; font-weight: 600; letter-spacing: 0.05em; }
+.go-btn {
+  width: 100%; max-width: 400px; padding: 18px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: var(--bg); border: none; border-radius: 50px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.2em;
+  cursor: pointer; box-shadow: 0 4px 24px rgba(201,168,76,0.25); transition: all 0.18s;
+}
+.go-btn:disabled { background: var(--surface2); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+.go-btn:not(:disabled):active { transform: scale(0.97); }
+
+/* ══ NAMES SCREEN ══ */
+#names-screen {
+  display: none; flex-direction: column; align-items: center;
+  min-height: 100vh; padding: 44px 20px 72px; gap: 14px; overflow-y: auto;
+}
+.names-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 6px; text-align: center; }
+.names-sub { font-family: 'Cinzel', serif; font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 10px; text-align: center; letter-spacing: 0.05em; }
+#names-list { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; }
+.name-row { background: var(--surface); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px 14px; }
+.name-lt { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.06em; color: var(--gold); margin-bottom: 8px; line-height: 1.3; }
+.name-lt-role { font-family: 'Cinzel', serif; font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: 0.06em; }
+.name-input {
+  width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.12); border-radius: 8px;
+  color: #fff; font-family: Georgia, serif; font-size: 17px;
+  outline: none; transition: border-color 0.15s;
+  text-transform: none;
+}
+.name-input::placeholder { color: var(--muted); font-size: 13px; opacity: 0.5; }
+.name-input:focus { border-color: var(--gold); }
+.names-go-btn {
+  width: 100%; max-width: 420px; padding: 17px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: var(--bg); border: none; border-radius: 50px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.2em;
+  cursor: pointer; margin-top: 8px; box-shadow: 0 4px 24px rgba(201,168,76,0.25); transition: all 0.18s;
+}
+.names-go-btn:active { transform: scale(0.97); }
+.names-back-btn { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 8px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ══ GAME ══ */
+#game {
+  display: none; flex-direction: column;
+  position: fixed; inset: 0;
+}
+.game-header {
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px 16px 10px; border-bottom: 1px solid var(--border);
+  background: var(--bg2); flex-shrink: 0; height: 46px;
+}
+.game-header-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.15em; color: var(--gold); }
+
+.players-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding-bottom: 68px; }
+
+.game-col { display: flex; flex-direction: column; flex: 1; }
+
+/* ── Carte joueur ── */
+.pcard {
+  flex: 1; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: stretch;
+  border: 1px solid rgba(0,0,0,0.35);
+  transition: background 0.3s;
+}
+.pcard.color-1 { background: var(--c1); }
+.pcard.color-2 { background: var(--c2); }
+.pcard.color-3 { background: var(--c3); }
+.pcard.color-4 { background: var(--c4); }
+.pcard.color-5 { background: var(--c5); }
+.pcard.color-6 { background: var(--c6); }
+.pcard.elim { opacity: 0.3; }
+
+.card-inner { position: absolute; top: 0; left: 0; display: flex; flex-direction: column; align-items: stretch; overflow: hidden; }
+.card-inner::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 50%; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(240,192,64,0.8), transparent);
+  z-index: 2; pointer-events: none;
+}
+
+.rot-0 .card-inner, .rot-180 .card-inner { width: 100%; height: 100%; }
+.rot-0   .card-inner { transform: rotate(0deg); }
+.rot-180 .card-inner { transform: rotate(180deg); transform-origin: center center; }
+.rot-l .card-inner, .rot-r .card-inner { transform-origin: top left; }
+.rot-l .card-inner { transform: rotate(90deg)  translateY(-100%); }
+.rot-r .card-inner { transform: rotate(-90deg) translateX(-100%); }
+
+@keyframes urgencePulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+.score.crit-blink { animation: urgencePulse 2s ease-in-out infinite; }
+
+.tap-zone {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  position: relative; transition: background 0.12s; cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent; overflow: hidden;
+  padding: 1.5vmin 2vmin; gap: 0.8vmin;
+}
+/* pas de bordure de séparation */
+/* + à droite, - à gauche via position du tap — une seule zone */
+.tap-plus.flash-pos  { background: rgba(255,255,255,0.15); }
+.tap-minus.flash-neg { background: rgba(0,0,0,0.22); }
+.tap-zone.flash-pos  { background: rgba(255,255,255,0.15); }
+.tap-zone.flash-neg  { background: rgba(0,0,0,0.22); }
+
+/* Signes − et + visibles en bas gauche/droite */
+.tap-sign-minus, .tap-sign-plus {
+  font-family: 'Bebas Neue', sans-serif; font-size: 9vmin; line-height: 1;
+  pointer-events: none; opacity: 0.75;
+  position: absolute; bottom: 2.5vmin;
+  text-shadow: 0 0 10px rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.9);
+}
+.tap-sign-minus { left: 3.5vmin; }
+.tap-sign-plus  { right: 3.5vmin; }
+
+.pname {
+  font-family: 'Bebas Neue', sans-serif; font-size: 7vmin; letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.95); text-align: center; line-height: 1.15;
+  pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  flex-shrink: 0; width: 100%;
+  white-space: nowrap; overflow: hidden;
+  display: block; transform-origin: center top;
+}
+.prole {
+  font-size: 4.5vmin; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.06em; text-align: center;
+  pointer-events: none; flex-shrink: 0; width: 100%;
+  white-space: nowrap; overflow: hidden;
+  display: block; transform-origin: center top;
+}
+/* Surnom joueur */
+.pplayer {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 8vmin; font-weight: bold;
+  font-style: italic;
+  color: #fff; letter-spacing: 0.02em; text-align: center; line-height: 1.2;
+  pointer-events: none; text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+  flex-shrink: 0; width: 100%;
+  white-space: nowrap; overflow: hidden;
+  display: block; transform-origin: center top;
+  text-transform: none;
+  padding-bottom: 0.3em;
+}
+.pplayer-ghost { display: block; height: 8vmin; flex-shrink: 0; }
+
+.score-wrap { position: relative; pointer-events: none; display: flex; align-items: center; justify-content: center; flex: 1; width: 100%; }
+.score { font-family: 'Bebas Neue', sans-serif; font-size: 12vmin; line-height: 1; color: #fff; display: block; text-align: center; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+.score.low  { color: #ffd060; }
+.score.crit { color: #ff8040; }
+
+
+.delta-flash { position: absolute; top: 0; right: -1.5vmin; font-family: 'Bebas Neue', sans-serif; font-size: 6vmin; font-weight: 700; opacity: 0; pointer-events: none; color: #fff; }
+.delta-flash.go { animation: flashUp 0.85s ease-out forwards; }
+@keyframes flashUp { 0%{opacity:1;transform:translateY(0)} 70%{opacity:1} 100%{opacity:0;transform:translateY(-2.5vmin)} }
+
+.elim-tag { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.elim-label { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.15em; color: #fff; opacity: 0.7; transform: rotate(-18deg); border: 2px solid rgba(255,255,255,0.5); padding: 2px 7px; }
+
+/* ══ BOTTOM BAR ══ */
+#bar {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg2); border-top: 1px solid var(--border);
+  padding: 6px 6px 14px; gap: 5px; z-index: 100;
+  align-items: center; justify-content: center; height: 68px;
+}
+.bar-btn {
+  flex: 1; max-width: 110px; padding: 7px 4px 6px;
+  background: var(--surface); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; color: var(--muted);
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.06em;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.bar-btn .btn-icon { font-size: 22px; line-height: 1; }
+.bar-btn .btn-label { line-height: 1; }
+.bar-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.bar-btn.danger { color: var(--red); border-color: rgba(224,96,16,0.25); }
+.bar-btn.rotate-btn { color: var(--gold); border-color: rgba(240,192,64,0.3); }
+.bar-btn:not(:disabled):active { transform: scale(0.96); }
+
+/* ══ MODALS ══ */
+.hidden { display: none !important; }
+.modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(20,14,8,0.9); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px 24px 24px; text-align: center; max-width: 320px; width: 100%; box-shadow: 0 8px 48px rgba(0,0,0,0.6); }
+.modal-icon { font-size: 34px; margin-bottom: 10px; }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 6px; }
+.winner-name { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.06em; color: #fff; line-height: 1.1; margin-bottom: 4px; }
+.winner-role { font-size: 15px; color: var(--muted); font-weight: 600; letter-spacing: 0.08em; margin-bottom: 22px; }
+.winner-btns { display: flex; flex-direction: column; gap: 10px; }
+.modal-btn { width: 100%; padding: 13px; border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.12em; cursor: pointer; transition: all 0.15s; }
+.modal-btn.primary { background: linear-gradient(135deg, var(--gold), var(--gold2)); color: var(--bg); }
+.modal-btn.secondary { background: var(--surface2); color: var(--muted); border: 1px solid rgba(255,255,255,0.08); }
+.modal-btn:active { transform: scale(0.97); }
+#reset-modal .modal-title { color: var(--red); }
+#reset-modal p { font-size: 14px; color: var(--muted); font-weight: 600; margin: 8px 0 20px; line-height: 1.6; }
+.reset-btns { display: flex; gap: 10px; }
+.reset-btns .modal-btn { flex: 1; }
+
+/* ══ RÈGLES ══ */
+.rules { position: fixed; inset: 0; z-index: 300; background: var(--bg2); overflow-y: auto; padding-bottom: 40px; }
+.rules-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 16px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg2); z-index: 1; }
+.rules-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.15em; color: var(--gold); }
+.rules-close { background: var(--surface2); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.rules-body { padding: 32px 20px; color: var(--muted); font-size: 15px; font-style: italic; text-align: center; }
+.recap { position: fixed; inset: 0; z-index: 300; background: var(--bg2); overflow-y: auto; padding-bottom: 40px; }
+.recap-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 16px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg2); z-index: 1; }
+.recap-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.15em; color: var(--gold); }
+.recap-close { background: var(--surface2); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.recap-player { margin: 14px 12px 0; background: var(--surface); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); }
+.recap-player-header { padding: 12px 14px 10px; border-bottom: 1px solid rgba(255,255,255,0.12); display: flex; align-items: baseline; gap: 12px; }
+.recap-player-name { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.06em; color: var(--gold); }
+.recap-player-role { font-size: 14px; color: var(--muted); font-weight: 600; letter-spacing: 0.06em; }
+.recap-entry { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.recap-entry-rank { font-size: 13px; color: var(--muted); font-weight: 700; letter-spacing: 0.05em; }
+.recap-entry-detail { font-size: 15px; color: var(--muted); font-weight: 600; margin-top: 3px; }
+.recap-entry-detail.humilie { color: var(--red); font-style: italic; }
+.recap-entry-detail.killer  { color: var(--green); font-style: italic; }
+.recap-delta { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em; }
+.recap-delta.pos { color: var(--green); }
+.recap-delta.neg { color: var(--red); }
+.recap-delta.neu { color: var(--muted); }
+.recap-total { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; background: rgba(255,255,255,0.06); border-top: 1px solid rgba(255,255,255,0.1); }
+.recap-total-label { font-size: 13px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+.recap-total-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- ══ SETUP ══ -->
+<div id="setup">
+  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()"><span id="theme-icon">🌙</span> Nuit</button>
+  <div class="brand">
+    <div class="brand-title">La Loi<br>du Milieu</div>
+    <div class="brand-rule"><span class="brand-rule-dot">◆</span></div>
+    <div class="brand-sub">Compteur d'influence</div>
+  </div>
+  <div class="section-label">Choisir les Capos<br>dans l'ordre du tour<br>2 à 6 joueurs</div>
+  <div class="lt-grid" id="lt-grid"></div>
+  <button class="go-btn" id="go-btn" disabled onclick="showNamesScreen()">Démarrer la partie</button>
+</div>
+
+<!-- ══ NAMES SCREEN ══ -->
+<div id="names-screen">
+  <div class="names-title">Qui joue qui ?</div>
+  <div class="names-sub">Optionnel — laissez vide pour jouer sans prénom</div>
+  <div id="names-list"></div>
+  <button class="names-go-btn" onclick="startGame()">Lancer ▶</button>
+  <button class="names-back-btn" onclick="backToSetup()">← Retour</button>
+</div>
+
+<!-- ══ GAME ══ -->
+<div id="game">
+  <div class="game-header">
+    <div class="game-header-title">La Loi du Milieu</div>
+  </div>
+  <div class="players-wrap" id="players-wrap"></div>
+</div>
+
+<!-- ══ BOTTOM BAR ══ -->
+<div id="bar">
+  <button class="bar-btn" id="undo-btn" disabled>
+    <span class="btn-icon">↩</span><span class="btn-label">Annuler</span>
+  </button>
+  <button class="bar-btn rotate-btn" onclick="rotatePlayers()">
+    <span class="btn-icon">🔄</span><span class="btn-label">Rotation</span>
+  </button>
+  <button class="bar-btn" onclick="showRecap()">
+    <span class="btn-icon">📋</span><span class="btn-label">Récap</span>
+  </button>
+  <button class="bar-btn" onclick="showRules()">
+    <span class="btn-icon">📖</span><span class="btn-label">Règles</span>
+  </button>
+  <button class="bar-btn danger" onclick="document.getElementById('reset-modal').classList.remove('hidden')">
+    <span class="btn-icon">✕</span><span class="btn-label">Reset</span>
+  </button>
+</div>
+
+<!-- WINNER -->
+<div class="modal-overlay hidden" id="winner">
+  <div class="modal-box">
+    <div class="modal-icon">👑</div>
+    <div class="modal-title">Victoire !</div>
+    <div class="winner-name" id="winner-name">—</div>
+    <div class="winner-role" id="winner-role">—</div>
+    <div class="winner-btns">
+      <button class="modal-btn primary" onclick="showRecap()">Voir le récap</button>
+      <button class="modal-btn secondary" onclick="confirmReset()">Nouvelle partie</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESET CONFIRM -->
+<div class="modal-overlay hidden" id="reset-modal">
+  <div class="modal-box">
+    <div class="modal-title">Nouvelle partie ?</div>
+    <p>La partie en cours sera perdue.</p>
+    <div class="reset-btns">
+      <button class="modal-btn secondary" onclick="document.getElementById('reset-modal').classList.add('hidden')">Annuler</button>
+      <button class="modal-btn primary" onclick="confirmReset()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- RÈGLES -->
+<div class="rules hidden" id="rules">
+  <div class="rules-header">
+    <div class="rules-title">Règles</div>
+    <button class="rules-close" onclick="document.getElementById('rules').classList.add('hidden')">✕</button>
+  </div>
+  <div class="rules-body">Les règles arrivent bientôt…</div>
+</div>
+
+<!-- RECAP -->
+<div class="recap hidden" id="recap">
+  <div class="recap-header">
+    <div class="recap-title">Récapitulatif</div>
+    <button class="recap-close" id="recap-close-btn">✕</button>
+  </div>
+  <div id="recap-body"></div>
+</div>
+
+<!-- KILLER SELECT -->
+<div class="modal-overlay hidden" id="killer-modal">
+  <div class="modal-box">
+    <div class="modal-icon">💀</div>
+    <div class="modal-title" id="killer-modal-title">Éliminé !</div>
+    <p id="killer-modal-sub" style="font-size:14px;color:var(--muted);margin:6px 0 18px;line-height:1.5"></p>
+    <div id="killer-btn-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+    <button class="modal-btn secondary" id="killer-skip-btn">Personne / Passer</button>
+  </div>
+</div>
+
+<script>
+// ── Données des capos, triés alphabétiquement par nom ──
+const LTS = [
+  { id:'ricciardo',  name:'Antonio Ricciardo', role:'Le Sage' },
+  { id:'russo',      name:'Carmela Russo',     role:'La Faussaire' },
+  { id:'caruso',     name:'Domenico Caruso',   role:'Le Molosse' },
+  { id:'emancini',   name:'Elena Mancini',     role:'La Tigresse' },
+  { id:'romano',     name:'Enzo Romano',       role:'Le Joueur' },
+  { id:'fdeluca',    name:'Francesca De Luca', role:'La Diplomate' },
+  { id:'ghost',      name:'Ghost',             role:"L'Ombre" },
+  { id:'gvendetta',  name:'Giulia Vendetta',   role:"L'Œil du Faucon" },
+  { id:'imoretti',   name:'Isabella Moretti',  role:'La Vipère' },
+  { id:'lvitale',    name:'Lorenzo Vitale',    role:'Le Marteau' },
+  { id:'belladonna', name:'Rosa Belladonna',   role:'La Sirène' },
+  { id:'smancini',   name:'Salvatore Mancini', role:'Le Loup' },
+];
+
+const MAX = 40, GROUP_DELAY = 1500;
+let selected = new Set(), players=[], undoStack=[], history=[], groupTimers={}, lastUndoTime={};
+let seatOrder = []; // indices dans players[], dans l'ordre des sièges
+let actionCounter = 0; // compteur global d'actions
+
+// ── Setup ──
+(function buildSetup() {
+  const g = document.getElementById('lt-grid');
+  LTS.forEach(lt => {
+    const d = document.createElement('div');
+    d.className = 'lt-pick';
+    d.innerHTML = `<div class="lt-check">✓</div><div class="lt-pick-name">${lt.name}</div><div class="lt-pick-role">${lt.role}</div>`;
+    d.onclick = () => {
+      if (selected.has(lt.id)) { selected.delete(lt.id); d.classList.remove('on'); }
+      else { if (selected.size >= 6) return; selected.add(lt.id); d.classList.add('on'); }
+      const btn = document.getElementById('go-btn');
+      btn.disabled = selected.size < 2;
+      btn.textContent = selected.size >= 2 ? `Suivant · ${selected.size} joueurs` : 'Démarrer la partie';
+    };
+    g.appendChild(d);
+  });
+})();
+
+function showNamesScreen() {
+  const list = document.getElementById('names-list');
+  list.innerHTML = '';
+  [...selected].forEach(id => {
+    const lt = LTS.find(l => l.id === id);
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    row.innerHTML = `
+      <div class="name-lt">${lt.name}<br><span class="name-lt-role">${lt.role}</span></div>
+      <input class="name-input" type="text" placeholder="Prénom du joueur" data-id="${id}" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
+    `;
+    list.appendChild(row);
+  });
+  setTimeout(() => { const f = list.querySelector('input'); if (f) f.focus(); }, 100);
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('names-screen').style.display = 'flex';
+}
+
+function startGame() {
+  const inputs = document.querySelectorAll('.name-input');
+  players = [...selected].map((id, i) => {
+    const lt = LTS.find(l => l.id === id);
+    return { id: lt.id, name: lt.name, role: lt.role, playerName: inputs[i]?.value.trim()||'', inf: MAX, eliminated: false };
+  });
+  seatOrder = players.map((_,i) => i); // sièges initiaux = ordre de sélection
+  undoStack=[]; history=[]; groupTimers={}; lastUndoTime={}; actionCounter=0;
+  document.getElementById('names-screen').style.display='none';
+  document.getElementById('game').style.display='flex';
+  document.getElementById('bar').style.display='flex';
+  renderGame();
+}
+
+// ── Rotation des sièges ──
+function rotatePlayers() {
+  if (players.length < 2) return;
+  saveUndo();
+  // Décale d'un cran dans le sens horaire : le dernier devient le premier
+  const last = seatOrder.pop();
+  seatOrder.unshift(last);
+  renderGame();
+}
+
+// ── Layout ──
+function getLayout(n) {
+  switch(n) {
+    case 3: return { cols:[{cards:[{idx:seatOrder[1],rot:'rot-l'}]},{cards:[{idx:seatOrder[2],rot:'rot-r'}]}], bottom:[{idx:seatOrder[0],rot:'rot-0'}] };
+    case 4: return { cols:[{cards:[{idx:seatOrder[1],rot:'rot-l'},{idx:seatOrder[0],rot:'rot-l'}]},{cards:[{idx:seatOrder[2],rot:'rot-r'},{idx:seatOrder[3],rot:'rot-r'}]}], bottom:[] };
+    case 5: return { cols:[{cards:[{idx:seatOrder[2],rot:'rot-l'},{idx:seatOrder[1],rot:'rot-l'}]},{cards:[{idx:seatOrder[3],rot:'rot-r'},{idx:seatOrder[4],rot:'rot-r'}]}], bottom:[{idx:seatOrder[0],rot:'rot-0'}] };
+    case 6: return { cols:[{cards:[{idx:seatOrder[2],rot:'rot-l'},{idx:seatOrder[1],rot:'rot-l'},{idx:seatOrder[0],rot:'rot-l'}]},{cards:[{idx:seatOrder[3],rot:'rot-r'},{idx:seatOrder[4],rot:'rot-r'},{idx:seatOrder[5],rot:'rot-r'}]}], bottom:[] };
+    default: return null;
+  }
+}
+
+// ── Rendu ──
+function renderGame() {
+  const wrap = document.getElementById('players-wrap');
+  wrap.innerHTML = '';
+  wrap.style.flexDirection = 'column';
+  const n = players.length;
+
+  if (n === 2) {
+    const col = document.createElement('div');
+    col.className = 'game-col';
+    col.appendChild(buildCard(seatOrder[1], 'rot-180'));
+    col.appendChild(buildCard(seatOrder[0], 'rot-0'));
+    wrap.appendChild(col);
+    wrap.style.visibility = 'hidden';
+    requestAnimationFrame(() => { fixLateralCards(); setTimeout(() => { fitTexts(); wrap.style.visibility = ''; }, 50); });
+    return;
+  }
+
+  const layout = getLayout(n);
+  if (layout.cols && layout.cols.length > 0) {
+    const mainRow = document.createElement('div');
+    const sidesRatio = (n === 3 || n === 5) ? 2 : 1;
+    mainRow.style.cssText = `display:flex; flex:${sidesRatio}; min-height:0; overflow:hidden;`;
+    layout.cols.forEach(col => {
+      const colEl = document.createElement('div');
+      colEl.className = 'game-col';
+      col.cards.forEach(({ idx, rot }) => colEl.appendChild(buildCard(idx, rot)));
+      mainRow.appendChild(colEl);
+    });
+    wrap.appendChild(mainRow);
+  }
+  if (layout.bottom && layout.bottom.length > 0) {
+    const botRow = document.createElement('div');
+    botRow.style.cssText = 'display:flex; flex:1; min-height:0;';
+    layout.bottom.forEach(({ idx, rot }) => {
+      const card = buildCard(idx, rot);
+      card.style.flex = '1';
+      botRow.appendChild(card);
+    });
+    wrap.appendChild(botRow);
+  }
+  wrap.style.visibility = 'hidden';
+  requestAnimationFrame(() => { fixLateralCards(); setTimeout(() => { fitTexts(); wrap.style.visibility = ''; }, 50); });
+}
+
+function buildCard(playerIdx, rot) {
+  const p = players[playerIdx];
+  const colorClass = `color-${(playerIdx % 6) + 1}`;
+  const elimClass = p.eliminated ? ' elim' : '';
+  const card = document.createElement('div');
+  card.className = `pcard ${colorClass} ${rot}${elimClass}`;
+  card.id = `card-${playerIdx}`;
+  const inner = document.createElement('div');
+  inner.className = 'card-inner';
+  inner.id = `inner-${playerIdx}`;
+
+  const critCls = (p.inf<=8&&!p.eliminated)?' crit-blink':'';
+  const cls = p.inf<=8?'crit':p.inf<=15?'low':'';
+  const playerNameHtml = p.playerName
+    ? `<div class="pplayer">${p.playerName}</div>`
+    : `<span class="pplayer-ghost"></span>`;
+
+  // Zone unique couvrant toute la carte — gauche=−, droite=+
+  const zone = document.createElement('div');
+  zone.className = 'tap-zone';
+  zone.innerHTML = `
+    <div class="pname">${p.name}</div>
+    <div class="prole">${p.role}</div>
+    ${playerNameHtml}
+    <div class="score-wrap">
+      <span class="score ${cls}${critCls}" id="sc-${playerIdx}">${p.inf}</span>
+      <span class="delta-flash" id="df-${playerIdx}"></span>
+    </div>
+    <span class="tap-sign-minus">－</span>
+    <span class="tap-sign-plus">＋</span>
+  `;
+
+  const handleTap = (e, isTouch) => {
+    if (isTouch) { e.preventDefault(); e.stopPropagation(); }
+    else e.stopPropagation();
+    // On prend le rect du pcard (non transformé) pour avoir les vraies coordonnées écran
+    const rect = card.getBoundingClientRect();
+    const clientX = isTouch ? e.changedTouches[0].clientX : e.clientX;
+    const clientY = isTouch ? e.changedTouches[0].clientY : e.clientY;
+    let isPlus;
+    if (rot === 'rot-l') {
+      // Pivoté +90° (antihoraire) : tête→droite, pieds→gauche, main droite→bas écran
+      isPlus = (clientY - rect.top) >= rect.height / 2;
+    } else if (rot === 'rot-r') {
+      // Pivoté -90° (horaire) : tête→gauche, pieds→droite, main droite→haut écran
+      isPlus = (clientY - rect.top) < rect.height / 2;
+    } else if (rot === 'rot-180') {
+      // Joueur retourné : sa droite = gauche écran
+      isPlus = (clientX - rect.left) < rect.width / 2;
+    } else {
+      // rot-0 : normal, droite = droite écran
+      isPlus = (clientX - rect.left) >= rect.width / 2;
+    }
+    const delta = isPlus ? +1 : -1;
+    adjust(playerIdx, delta, zone, delta > 0 ? 'flash-pos' : 'flash-neg');
+  };
+  zone.addEventListener('touchstart', e => handleTap(e, true), { passive: false });
+  zone.addEventListener('click',      e => handleTap(e, false));
+
+  inner.appendChild(zone);
+  if (p.eliminated) { const tag=document.createElement('div'); tag.className='elim-tag'; tag.innerHTML='<div class="elim-label">Éliminé</div>'; inner.appendChild(tag); }
+  card.appendChild(inner);
+  return card;
+}
+
+function fixLateralCards() {
+  document.querySelectorAll('.rot-l .card-inner, .rot-r .card-inner').forEach(inner => {
+    const pcard = inner.parentElement;
+    const w = pcard.offsetWidth, h = pcard.offsetHeight;
+    if (w===0||h===0) return;
+    inner.style.width = h+'px'; inner.style.height = w+'px';
+  });
+}
+window.addEventListener('resize', () => { if (document.getElementById('game').style.display!=='none') { fixLateralCards(); setTimeout(fitTexts, 50); } });
+
+// Adapte les polices à la hauteur visuelle de chaque carte
+let _fitTextsRunning = false;
+function fitTexts() {
+  if (_fitTextsRunning) return;
+  _fitTextsRunning = true;
+  document.querySelectorAll('.pcard').forEach(card => {
+    const isLateral = card.classList.contains('rot-l') || card.classList.contains('rot-r');
+    const inner = card.querySelector('.card-inner');
+    let cardH, cardW;
+    if (isLateral && inner && inner.offsetWidth > 0) {
+      cardH = inner.offsetWidth;
+      cardW = inner.offsetHeight;
+    } else {
+      cardH = card.offsetHeight;
+      cardW = card.offsetWidth;
+    }
+    if (cardH <= 0 || cardW <= 0) return;
+    const ref = Math.min(cardH, cardW);
+    const pname   = card.querySelector('.pname');
+    const prole   = card.querySelector('.prole');
+    const pplayer = card.querySelector('.pplayer');
+    const score   = card.querySelector('.score');
+    if (pname)   pname.style.fontSize   = (ref * 0.12) + 'px';
+    if (prole)   prole.style.fontSize   = (ref * 0.06) + 'px';
+    if (pplayer) pplayer.style.fontSize = (ref * 0.15) + 'px';
+    if (score)   score.style.fontSize   = (ref * 0.32) + 'px';
+  });
+  _fitTextsRunning = false;
+}
+
+function flashZone(zone, cls) { zone.classList.add(cls); setTimeout(()=>zone.classList.remove(cls),220); }
+
+function adjust(i, delta, zone, flashCls) {
+  const p = players[i]; if (p.eliminated) return;
+  saveUndo();
+  const prev = p.inf;
+  p.inf = Math.min(MAX, Math.max(0, p.inf+delta));
+  delta = p.inf - prev;
+  if (delta === 0) return;
+  const sc = document.getElementById(`sc-${i}`);
+  if (sc) { sc.textContent=p.inf; sc.className='score'+(p.inf<=8?' crit':p.inf<=15?' low':'')+(p.inf<=8&&!p.eliminated?' crit-blink':''); }
+  const card = document.getElementById(`card-${i}`);
+  if (card && !p.eliminated) { card.classList.remove('crit-blink'); }
+  flashDelta(i,delta); flashZone(zone, flashCls||(delta>0?'flash-pos':'flash-neg'));
+  logGrouped(i,delta);
+  if (p.inf<=0&&!p.eliminated) { p.eliminated=true; setTimeout(()=>{renderGame(); showKillerModal(i); },350); }
+}
+
+function showKillerModal(eliminatedIdx) {
+  const eliminated = players[eliminatedIdx];
+  const alive = players.filter((p,i) => !p.eliminated && i !== eliminatedIdx);
+  if (alive.length < 1 || players.filter(p=>!p.eliminated).length < 1) { checkWinner(); return; }
+  // Seulement si >2 joueurs au départ (sinon fin de partie directe)
+  if (players.length <= 2) { checkWinner(); return; }
+
+  const elimName = eliminated.playerName || eliminated.name;
+  document.getElementById('killer-modal-title').textContent = `${elimName} est éliminé·e !`;
+  document.getElementById('killer-modal-sub').textContent = 'Qui a causé cette élimination ? Ce joueur gagne 4 Influence.';
+
+  const list = document.getElementById('killer-btn-list');
+  list.innerHTML = '';
+  alive.forEach((p, _) => {
+    const realIdx = players.indexOf(p);
+    const btn = document.createElement('button');
+    btn.className = 'modal-btn secondary';
+    btn.textContent = (p.playerName || p.name) + (p.playerName ? ` (${p.name})` : '');
+    btn.onclick = () => {
+      document.getElementById('killer-modal').classList.add('hidden');
+      // Mémoriser le tueur sur l'éliminé et la victime sur le tueur, avec le rang courant
+      const elimRank = actionCounter + 1;
+      eliminated.killedBy = p.playerName || p.name;
+      eliminated.killedByRank = elimRank;
+      p.killed = p.killed || [];
+      p.killed.push({ name: eliminated.playerName || eliminated.name, rank: elimRank });
+      saveUndo();
+      const prev = p.inf;
+      p.inf = Math.min(MAX, p.inf + 4);
+      const gained = p.inf - prev;
+      if (gained > 0) {
+        const sc = document.getElementById(`sc-${realIdx}`);
+        if (sc) { sc.textContent = p.inf; sc.className = 'score' + (p.inf<=8?' crit':p.inf<=15?' low':'') + (p.inf<=8?' crit-blink':''); }
+        flashDelta(realIdx, gained);
+        logGrouped(realIdx, gained);
+      }
+      checkWinner();
+    };
+    list.appendChild(btn);
+  });
+
+  document.getElementById('killer-skip-btn').onclick = () => {
+    document.getElementById('killer-modal').classList.add('hidden');
+    checkWinner();
+  };
+  document.getElementById('killer-modal').classList.remove('hidden');
+}
+
+function toggleTheme() {
+  const isDay = document.body.classList.toggle('day-mode');
+  document.getElementById('theme-icon').textContent = isDay ? '☀️' : '🌙';
+  document.getElementById('theme-btn').childNodes[1].textContent = isDay ? ' Jour' : ' Nuit';
+  // Recalculer les tailles de texte avec les nouvelles font-size CSS
+  requestAnimationFrame(fitTexts);
+}
+
+function flashDelta(i,delta) {
+  const el=document.getElementById(`df-${i}`); if(!el)return;
+  el.className='delta-flash'; el.textContent=(delta>0?'+':'')+delta;
+  el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+}
+
+// ── Historique — chaque groupe a un rang d'action global ──
+function logGrouped(playerIdx, delta) {
+  const p = players[playerIdx]; const now = Date.now();
+  let group = history.find(h => h.playerIdx===playerIdx && h.open);
+  const displayName = p.playerName ? `${p.playerName} (${p.name})` : p.name;
+  if (!group) {
+    actionCounter++;
+    group = { playerIdx, who:displayName, role:p.role, entries:[], open:true, rank:actionCounter };
+    history.unshift(group);
+  }
+  group.entries.push({ delta, ts:now });
+  if (groupTimers[playerIdx]) clearTimeout(groupTimers[playerIdx]);
+  groupTimers[playerIdx] = setTimeout(()=>{ group.open=false; }, GROUP_DELAY);
+}
+
+// ── Undo : clic simple + appui long continu ──
+(function setupUndo() {
+  const btn = document.getElementById('undo-btn');
+  let interval = null, timeout = null;
+  const start = e => {
+    e.preventDefault();
+    undoLast();
+    timeout = setTimeout(() => { interval = setInterval(undoLast, 120); }, 500);
+  };
+  const stop = () => { clearTimeout(timeout); clearInterval(interval); timeout=null; interval=null; };
+  btn.addEventListener('touchstart', start, { passive: false });
+  btn.addEventListener('touchend',   stop);
+  btn.addEventListener('touchcancel',stop);
+  btn.addEventListener('mousedown',  start);
+  btn.addEventListener('mouseup',    stop);
+  btn.addEventListener('mouseleave', stop);
+})();
+
+function saveUndo() {
+  undoStack.push(JSON.stringify({ players, history, seatOrder, actionCounter }));
+  if (undoStack.length>30) undoStack.shift();
+  document.getElementById('undo-btn').disabled=false;
+}
+
+function undoLast() {
+  if (!undoStack.length) return;
+  const snap = JSON.parse(undoStack.pop());
+  players=snap.players; history=snap.history; seatOrder=snap.seatOrder; actionCounter=snap.actionCounter;
+  document.getElementById('undo-btn').disabled=undoStack.length===0;
+  renderGame();
+}
+
+function checkWinner() {
+  const alive = players.filter(p=>!p.eliminated);
+  if (alive.length!==1) return;
+  setTimeout(()=>{
+    const w=alive[0];
+    document.getElementById('winner-name').textContent=w.playerName||w.name;
+    document.getElementById('winner-role').textContent=w.playerName?`${w.name} · ${w.role}`:w.role;
+    document.getElementById('winner').classList.remove('hidden');
+  },500);
+}
+
+function showRules() { document.getElementById('rules').classList.remove('hidden'); }
+
+function showRecap() {
+  history.forEach(h=>{h.open=false;}); Object.values(groupTimers).forEach(clearTimeout);
+  let html='';
+  players.forEach((p,pi) => {
+    const groups = history.filter(h=>h.playerIdx===pi).sort((a,b)=>a.rank-b.rank);
+    if (!groups.length) return;
+    const totalDelta = groups.reduce((s,g)=>s+g.entries.reduce((ss,e)=>ss+e.delta,0),0);
+    const sign = totalDelta>0?'+':'';
+    html += `<div class="recap-player"><div class="recap-player-header"><div class="recap-player-name">${p.name}</div><div class="recap-player-role">${p.role}</div></div>`;
+    // Fusionner actions et événements d'élimination, triés par rang
+    const events = [];
+    groups.forEach(g => events.push({ rank: g.rank, type: 'action', g }));
+    if (p.eliminated && p.killedBy) events.push({ rank: p.killedByRank || 999, type: 'humilié', name: p.killedBy });
+    if (p.killed) p.killed.forEach(k => events.push({ rank: k.rank || 999, type: 'killer', name: k.name }));
+    events.sort((a,b) => a.rank - b.rank);
+
+    events.forEach(ev => {
+      if (ev.type === 'action') {
+        const g = ev.g;
+        const sum = g.entries.reduce((s,e)=>s+e.delta,0);
+        const cls = sum>0?'pos':sum<0?'neg':'neu';
+        const s = sum>0?'+':'';
+        const absSum = Math.abs(sum);
+        const detail = sum > 0 ? `Gain de ${absSum} Influence` : sum < 0 ? `Perte de ${absSum} Influence` : `Neutre`;
+        html += `<div class="recap-entry"><div><div class="recap-entry-rank">Action n°${g.rank}</div><div class="recap-entry-detail">${detail}</div></div><div class="recap-delta ${cls}">${s}${sum}</div></div>`;
+      } else if (ev.type === 'humilié') {
+        html += `<div class="recap-entry"><div class="recap-entry-detail humilie">Humilié·e par ${ev.name}</div></div>`;
+      } else if (ev.type === 'killer') {
+        html += `<div class="recap-entry"><div class="recap-entry-detail killer">A eu raison de ${ev.name}</div></div>`;
+      }
+    });
+    html += `<div class="recap-total"><div class="recap-total-label">Bilan · Influence finale</div><div class="recap-total-val">${sign}${totalDelta} · ${p.inf}</div></div></div>`;
+  });
+  if (!html) html='<div style="color:var(--muted);text-align:center;margin-top:48px;font-size:15px;font-style:italic">Aucune action enregistrée.</div>';
+  document.getElementById('recap-body').innerHTML=html;
+  document.getElementById('recap-close-btn').onclick=()=>document.getElementById('recap').classList.add('hidden');
+  document.getElementById('recap').classList.remove('hidden');
+}
+
+function backToSetup() { document.getElementById('names-screen').style.display='none'; document.getElementById('setup').style.display='flex'; }
+
+function confirmReset() {
+  ['reset-modal','winner','recap'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('game').style.display='none';
+  document.getElementById('bar').style.display='none';
+  document.getElementById('names-screen').style.display='none';
+  document.getElementById('setup').style.display='flex';
+  selected=new Set();
+  document.querySelectorAll('.lt-pick').forEach(el=>el.classList.remove('on'));
+  const btn=document.getElementById('go-btn'); btn.disabled=true; btn.textContent='Démarrer la partie';
+}
+</script>
+</body>
+</html>

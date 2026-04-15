@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script>
+  if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{});
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+</script>
+<title>La Loi du Milieu</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,300&family=Bebas+Neue&display=swap');
+
+@media screen and (orientation: landscape) {
+  body { transform: rotate(90deg); transform-origin: left top; width: 100vh; height: 100vw; overflow: hidden; position: absolute; top: 0; left: 100%; }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html, body {
+  height: 100%; min-height: 100vh;
+  background: #2e2418 !important;
+  color: #ffffff !important;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  overflow-x: hidden;
+}
+
+:root {
+  --bg:      #2e2418;
+  --bg2:     #261e13;
+  --surface: #3d3020;
+  --surface2:#483828;
+  --gold:    #f0c040;
+  --gold2:   #ffe070;
+  --border:  rgba(240,192,64,0.28);
+  --muted:   #c8aa78;
+  --red:     #e06010;
+  --green:   #1a80c0;
+  --c1: #5c2a0e; --c2: #0e3d5c; --c3: #2d4a1e;
+  --c4: #4a1e4a; --c5: #5c4200; --c6: #1e3d40;
+}
+
+/* ══ SETUP ══ */
+#setup {
+  display: flex; flex-direction: column; align-items: center;
+  min-height: 100vh; padding: 52px 24px 72px; overflow-y: auto;
+}
+.brand { text-align: center; margin-bottom: 20px; }
+.brand-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(44px,12vw,64px);
+  letter-spacing: 0.12em; color: var(--gold); line-height: 0.95;
+}
+.brand-rule { display: flex; align-items: center; gap: 12px; margin: 12px auto 8px; max-width: 200px; }
+.brand-rule::before, .brand-rule::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0.4;
+}
+.brand-rule-dot { color: var(--gold); font-size: 8px; opacity: 0.7; }
+.brand-sub { font-size: 13px; letter-spacing: 0.35em; color: var(--muted); text-transform: uppercase; font-weight: 300; }
+.section-label {
+  font-size: 13px; letter-spacing: 0.3em; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 14px;
+  align-self: flex-start; max-width: 400px; width: 100%;
+}
+.lt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; width: 100%; max-width: 440px; margin-bottom: 28px; }
+.lt-pick {
+  padding: 12px 10px 10px; background: var(--surface);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 12px; text-align: center; cursor: pointer;
+  transition: all 0.18s; user-select: none; -webkit-user-select: none;
+}
+.lt-pick.on { border-color: rgba(240,192,64,0.45); background: var(--surface2); }
+.lt-check {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 1.5px solid var(--muted); margin: 0 auto 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: transparent; transition: all 0.18s;
+}
+.lt-pick.on .lt-check { background: var(--gold); border-color: var(--gold); color: var(--bg); }
+.lt-pick-name { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.04em; color: var(--gold); line-height: 1.1; }
+.lt-pick-role { font-size: 12px; color: var(--muted); margin-top: 3px; font-style: italic; }
+.go-btn {
+  width: 100%; max-width: 400px; padding: 18px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: var(--bg); border: none; border-radius: 50px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.2em;
+  cursor: pointer; box-shadow: 0 4px 24px rgba(201,168,76,0.25); transition: all 0.18s;
+}
+.go-btn:disabled { background: var(--surface2); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+.go-btn:not(:disabled):active { transform: scale(0.97); }
+
+/* ══ NAMES SCREEN ══ */
+#names-screen {
+  display: none; flex-direction: column; align-items: center;
+  min-height: 100vh; padding: 44px 20px 72px; gap: 14px; overflow-y: auto;
+}
+.names-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 6px; text-align: center; }
+.names-sub { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 10px; text-align: center; }
+#names-list { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; }
+.name-row { background: var(--surface); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px 14px; }
+.name-lt { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.06em; color: var(--gold); margin-bottom: 8px; line-height: 1.3; }
+.name-lt-role { font-family: 'Cormorant Garamond', serif; font-size: 14px; color: var(--muted); font-style: italic; font-weight: 400; }
+.name-input {
+  width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.12); border-radius: 8px;
+  color: #fff; font-family: 'Cormorant Garamond', serif; font-size: 18px;
+  outline: none; transition: border-color 0.15s;
+}
+.name-input::placeholder { color: var(--muted); }
+.name-input:focus { border-color: var(--gold); }
+.names-go-btn {
+  width: 100%; max-width: 420px; padding: 17px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: var(--bg); border: none; border-radius: 50px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.2em;
+  cursor: pointer; margin-top: 8px; box-shadow: 0 4px 24px rgba(201,168,76,0.25); transition: all 0.18s;
+}
+.names-go-btn:active { transform: scale(0.97); }
+.names-back-btn { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 8px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ══ GAME ══ */
+#game {
+  display: none; flex-direction: column;
+  position: fixed; inset: 0;
+}
+.game-header {
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px 16px 10px; border-bottom: 1px solid var(--border);
+  background: var(--bg2); flex-shrink: 0; height: 46px;
+}
+.game-header-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.15em; color: var(--gold); }
+
+.players-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding-bottom: 62px; }
+
+.game-col { display: flex; flex-direction: column; flex: 1; }
+
+/* ── Carte joueur ── */
+.pcard {
+  flex: 1; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: stretch;
+  border: 1px solid rgba(0,0,0,0.35);
+  transition: background 0.3s;
+}
+.pcard.color-1 { background: var(--c1); }
+.pcard.color-2 { background: var(--c2); }
+.pcard.color-3 { background: var(--c3); }
+.pcard.color-4 { background: var(--c4); }
+.pcard.color-5 { background: var(--c5); }
+.pcard.color-6 { background: var(--c6); }
+.pcard.elim { opacity: 0.3; }
+
+.card-inner { position: absolute; top: 0; left: 0; display: flex; flex-direction: column; align-items: stretch; overflow: hidden; }
+.card-inner::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 50%; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(240,192,64,0.8), transparent);
+  z-index: 2; pointer-events: none;
+}
+
+.rot-0 .card-inner, .rot-180 .card-inner { width: 100%; height: 100%; }
+.rot-0   .card-inner { transform: rotate(0deg); }
+.rot-180 .card-inner { transform: rotate(180deg); transform-origin: center center; }
+.rot-l .card-inner, .rot-r .card-inner { transform-origin: top left; }
+.rot-l .card-inner { transform: rotate(90deg)  translateY(-100%); }
+.rot-r .card-inner { transform: rotate(-90deg) translateX(-100%); }
+
+@keyframes urgencePulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+.pcard.crit-blink { animation: urgencePulse 0.8s ease-in-out infinite; }
+
+.tap-zone {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  position: relative; transition: background 0.12s; cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent; overflow: hidden;
+  padding: 1.5vmin 2vmin; gap: 0.8vmin;
+}
+.tap-minus { border-top: 1px solid rgba(255,255,255,0.12); }
+.tap-plus.flash-pos  { background: rgba(255,255,255,0.15); }
+.tap-minus.flash-neg { background: rgba(0,0,0,0.22); }
+
+.tap-sign {
+  font-family: 'Bebas Neue', sans-serif; font-size: 6vmin; line-height: 1;
+  pointer-events: none; opacity: 0.7;
+  position: absolute; right: 3vmin; top: 50%; transform: translateY(-50%);
+}
+.tap-plus  .tap-sign { color: rgba(255,255,255,0.9); }
+.tap-minus .tap-sign { color: rgba(255,255,255,0.65); }
+
+.pname { margin-top: 2vmin;
+  font-family: 'Bebas Neue', sans-serif; font-size: 5vmin; letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.95); text-align: center; line-height: 1.15;
+  pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.prole {
+  font-size: 3vmin; color: rgba(255,255,255,0.6); font-style: italic; text-align: center;
+  pointer-events: none; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+/* Prénom joueur — plus grand */
+.pplayer {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 8vmin;
+  color: #fff; letter-spacing: 0.04em; text-align: center; line-height: 1;
+  pointer-events: none; text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+  flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.pplayer-ghost { display: block; height: 8vmin; flex-shrink: 0; }
+
+.score-wrap { position: relative; pointer-events: none; display: flex; align-items: center; justify-content: center; flex: 1; width: 100%; }
+.score { font-family: 'Bebas Neue', sans-serif; font-size: 14vmin; line-height: 1; color: #fff; display: block; text-align: center; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+.score.low  { color: #ffd060; }
+.score.crit { color: #ff8040; }
+
+.delta-flash { position: absolute; top: 0; right: -1.5vmin; font-family: 'Bebas Neue', sans-serif; font-size: 3vmin; font-weight: 700; opacity: 0; pointer-events: none; color: #fff; }
+.delta-flash.go { animation: flashUp 0.85s ease-out forwards; }
+@keyframes flashUp { 0%{opacity:1;transform:translateY(0)} 70%{opacity:1} 100%{opacity:0;transform:translateY(-2.5vmin)} }
+
+.elim-tag { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.elim-label { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.15em; color: #fff; opacity: 0.7; transform: rotate(-18deg); border: 2px solid rgba(255,255,255,0.5); padding: 2px 7px; }
+
+/* ══ BOTTOM BAR ══ */
+#bar {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg2); border-top: 1px solid var(--border);
+  padding: 8px 8px 12px; gap: 6px; z-index: 100;
+  align-items: center; justify-content: center; height: 62px;
+}
+.bar-btn {
+  flex: 1; max-width: 130px; padding: 10px 6px;
+  background: var(--surface); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; color: var(--muted);
+  font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.08em;
+  cursor: pointer; transition: all 0.15s;
+}
+.bar-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.bar-btn.danger { color: var(--red); border-color: rgba(224,96,16,0.25); }
+.bar-btn.rotate-btn { color: var(--gold); border-color: rgba(240,192,64,0.3); font-size: 16px; }
+.bar-btn:not(:disabled):active { transform: scale(0.96); }
+
+/* ══ MODALS ══ */
+.hidden { display: none !important; }
+.modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(20,14,8,0.9); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px 24px 24px; text-align: center; max-width: 320px; width: 100%; box-shadow: 0 8px 48px rgba(0,0,0,0.6); }
+.modal-icon { font-size: 34px; margin-bottom: 10px; }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 6px; }
+.winner-name { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.06em; color: #fff; line-height: 1.1; margin-bottom: 4px; }
+.winner-role { font-size: 14px; color: var(--muted); font-style: italic; margin-bottom: 22px; }
+.winner-btns { display: flex; flex-direction: column; gap: 10px; }
+.modal-btn { width: 100%; padding: 13px; border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 0.12em; cursor: pointer; transition: all 0.15s; }
+.modal-btn.primary { background: linear-gradient(135deg, var(--gold), var(--gold2)); color: var(--bg); }
+.modal-btn.secondary { background: var(--surface2); color: var(--muted); border: 1px solid rgba(255,255,255,0.08); }
+.modal-btn:active { transform: scale(0.97); }
+#reset-modal .modal-title { color: var(--red); }
+#reset-modal p { font-size: 13px; color: var(--muted); margin: 8px 0 20px; line-height: 1.5; }
+.reset-btns { display: flex; gap: 10px; }
+.reset-btns .modal-btn { flex: 1; }
+
+/* ══ RECAP ══ */
+.recap { position: fixed; inset: 0; z-index: 300; background: var(--bg2); overflow-y: auto; padding-bottom: 40px; }
+.recap-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 16px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg2); z-index: 1; }
+.recap-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.15em; color: var(--gold); }
+.recap-close { background: var(--surface2); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.recap-player { margin: 14px 12px 0; background: var(--surface); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); }
+.recap-player-header { padding: 12px 14px 10px; border-bottom: 1px solid rgba(255,255,255,0.12); display: flex; align-items: baseline; gap: 12px; }
+.recap-player-name { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.06em; color: var(--gold); }
+.recap-player-role { font-size: 15px; color: #e8d09a; font-style: italic; }
+.recap-entry { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.recap-entry-rank { font-size: 14px; color: #e0cfa0; font-weight: 600; letter-spacing: 0.03em; }
+.recap-entry-detail { font-size: 15px; color: #fff; margin-top: 3px; }
+.recap-delta { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em; }
+.recap-delta.pos { color: #40d0ff; }
+.recap-delta.neg { color: #ff7030; }
+.recap-delta.neu { color: #c8aa78; }
+.recap-total { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; background: rgba(255,255,255,0.06); border-top: 1px solid rgba(255,255,255,0.1); }
+.recap-total-label { font-size: 13px; color: #e0cfa0; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; }
+.recap-total-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- ══ SETUP ══ -->
+<div id="setup">
+  <div class="brand">
+    <div class="brand-title">La Loi<br>du Milieu</div>
+    <div class="brand-rule"><span class="brand-rule-dot">◆</span></div>
+    <div class="brand-sub">Compteur d'influence</div>
+  </div>
+  <div class="section-label">Choisir les Capos<br>dans l'ordre du tour<br>2 à 6 joueurs</div>
+  <div class="lt-grid" id="lt-grid"></div>
+  <button class="go-btn" id="go-btn" disabled onclick="showNamesScreen()">Démarrer la partie</button>
+</div>
+
+<!-- ══ NAMES SCREEN ══ -->
+<div id="names-screen">
+  <div class="names-title">Qui joue qui ?</div>
+  <div class="names-sub">Optionnel — laissez vide pour jouer sans prénom</div>
+  <div id="names-list"></div>
+  <button class="names-go-btn" onclick="startGame()">Lancer ▶</button>
+  <button class="names-back-btn" onclick="backToSetup()">← Retour</button>
+</div>
+
+<!-- ══ GAME ══ -->
+<div id="game">
+  <div class="game-header">
+    <div class="game-header-title">La Loi du Milieu</div>
+  </div>
+  <div class="players-wrap" id="players-wrap"></div>
+</div>
+
+<!-- ══ BOTTOM BAR ══ -->
+<div id="bar">
+  <button class="bar-btn" id="undo-btn" disabled>↩ Annuler</button>
+  <button class="bar-btn rotate-btn" onclick="rotatePlayers()" title="Faire tourner les places">⟳ Rotation</button>
+  <button class="bar-btn" onclick="showRecap()">Récap</button>
+  <button class="bar-btn danger" onclick="document.getElementById('reset-modal').classList.remove('hidden')">Reset</button>
+</div>
+
+<!-- WINNER -->
+<div class="modal-overlay hidden" id="winner">
+  <div class="modal-box">
+    <div class="modal-icon">👑</div>
+    <div class="modal-title">Victoire !</div>
+    <div class="winner-name" id="winner-name">—</div>
+    <div class="winner-role" id="winner-role">—</div>
+    <div class="winner-btns">
+      <button class="modal-btn primary" onclick="showRecap()">Voir le récap</button>
+      <button class="modal-btn secondary" onclick="confirmReset()">Nouvelle partie</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESET CONFIRM -->
+<div class="modal-overlay hidden" id="reset-modal">
+  <div class="modal-box">
+    <div class="modal-title">Nouvelle partie ?</div>
+    <p>La partie en cours sera perdue.</p>
+    <div class="reset-btns">
+      <button class="modal-btn secondary" onclick="document.getElementById('reset-modal').classList.add('hidden')">Annuler</button>
+      <button class="modal-btn primary" onclick="confirmReset()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECAP -->
+<div class="recap hidden" id="recap">
+  <div class="recap-header">
+    <div class="recap-title">Récapitulatif</div>
+    <button class="recap-close" id="recap-close-btn">✕</button>
+  </div>
+  <div id="recap-body"></div>
+</div>
+
+<script>
+// ── Données des capos, triés alphabétiquement par nom ──
+const LTS = [
+  { id:'ricciardo',  name:'Antonio Ricciardo', role:'Le Sage' },
+  { id:'russo',      name:'Carmela Russo',     role:'La Faussaire' },
+  { id:'caruso',     name:'Domenico Caruso',   role:'Le Molosse' },
+  { id:'emancini',   name:'Elena Mancini',     role:'La Tigresse' },
+  { id:'romano',     name:'Enzo Romano',       role:'Le Joueur' },
+  { id:'fdeluca',    name:'Francesca De Luca', role:'La Diplomate' },
+  { id:'ghost',      name:'Ghost',             role:"L'Ombre" },
+  { id:'gvendetta',  name:'Giulia Vendetta',   role:"L'Œil du Faucon" },
+  { id:'imoretti',   name:'Isabella Moretti',  role:'La Vipère' },
+  { id:'lvitale',    name:'Lorenzo Vitale',    role:'Le Marteau' },
+  { id:'belladonna', name:'Rosa Belladonna',   role:'La Sirène' },
+  { id:'smancini',   name:'Salvatore Mancini', role:'Le Loup' },
+];
+
+const MAX = 40, GROUP_DELAY = 1500;
+let selected = new Set(), players=[], undoStack=[], history=[], groupTimers={}, lastUndoTime={};
+let seatOrder = []; // indices dans players[], dans l'ordre des sièges
+let actionCounter = 0; // compteur global d'actions
+
+// ── Setup ──
+(function buildSetup() {
+  const g = document.getElementById('lt-grid');
+  LTS.forEach(lt => {
+    const d = document.createElement('div');
+    d.className = 'lt-pick';
+    d.innerHTML = `<div class="lt-check">✓</div><div class="lt-pick-name">${lt.name}</div><div class="lt-pick-role">${lt.role}</div>`;
+    d.onclick = () => {
+      if (selected.has(lt.id)) { selected.delete(lt.id); d.classList.remove('on'); }
+      else { if (selected.size >= 6) return; selected.add(lt.id); d.classList.add('on'); }
+      const btn = document.getElementById('go-btn');
+      btn.disabled = selected.size < 2;
+      btn.textContent = selected.size >= 2 ? `Suivant · ${selected.size} joueurs` : 'Démarrer la partie';
+    };
+    g.appendChild(d);
+  });
+})();
+
+function showNamesScreen() {
+  const list = document.getElementById('names-list');
+  list.innerHTML = '';
+  [...selected].forEach(id => {
+    const lt = LTS.find(l => l.id === id);
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    row.innerHTML = `
+      <div class="name-lt">${lt.name}<br><span class="name-lt-role">${lt.role}</span></div>
+      <input class="name-input" type="text" placeholder="Prénom du joueur" data-id="${id}" maxlength="20" autocomplete="off" autocorrect="off" spellcheck="false">
+    `;
+    list.appendChild(row);
+  });
+  setTimeout(() => { const f = list.querySelector('input'); if (f) f.focus(); }, 100);
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('names-screen').style.display = 'flex';
+}
+
+function startGame() {
+  const inputs = document.querySelectorAll('.name-input');
+  players = [...selected].map((id, i) => {
+    const lt = LTS.find(l => l.id === id);
+    return { id: lt.id, name: lt.name, role: lt.role, playerName: inputs[i]?.value.trim()||'', inf: MAX, eliminated: false };
+  });
+  seatOrder = players.map((_,i) => i); // sièges initiaux = ordre de sélection
+  undoStack=[]; history=[]; groupTimers={}; lastUndoTime={}; actionCounter=0;
+  document.getElementById('names-screen').style.display='none';
+  document.getElementById('game').style.display='flex';
+  document.getElementById('bar').style.display='flex';
+  renderGame();
+}
+
+// ── Rotation des sièges ──
+function rotatePlayers() {
+  if (players.length < 2) return;
+  saveUndo();
+  // Décale d'un cran dans le sens horaire : le dernier devient le premier
+  const last = seatOrder.pop();
+  seatOrder.unshift(last);
+  renderGame();
+}
+
+// ── Layout ──
+function getLayout(n) {
+  switch(n) {
+    case 3: return { cols:[{cards:[{idx:seatOrder[1],rot:'rot-l'}]},{cards:[{idx:seatOrder[2],rot:'rot-r'}]}], bottom:[{idx:seatOrder[0],rot:'rot-0'}] };
+    case 4: return { cols:[{cards:[{idx:seatOrder[1],rot:'rot-l'},{idx:seatOrder[0],rot:'rot-l'}]},{cards:[{idx:seatOrder[2],rot:'rot-r'},{idx:seatOrder[3],rot:'rot-r'}]}], bottom:[] };
+    case 5: return { cols:[{cards:[{idx:seatOrder[2],rot:'rot-l'},{idx:seatOrder[1],rot:'rot-l'}]},{cards:[{idx:seatOrder[3],rot:'rot-r'},{idx:seatOrder[4],rot:'rot-r'}]}], bottom:[{idx:seatOrder[0],rot:'rot-0'}] };
+    case 6: return { cols:[{cards:[{idx:seatOrder[2],rot:'rot-l'},{idx:seatOrder[1],rot:'rot-l'},{idx:seatOrder[0],rot:'rot-l'}]},{cards:[{idx:seatOrder[3],rot:'rot-r'},{idx:seatOrder[4],rot:'rot-r'},{idx:seatOrder[5],rot:'rot-r'}]}], bottom:[] };
+    default: return null;
+  }
+}
+
+// ── Rendu ──
+function renderGame() {
+  const wrap = document.getElementById('players-wrap');
+  wrap.innerHTML = '';
+  wrap.style.flexDirection = 'column';
+  const n = players.length;
+
+  if (n === 2) {
+    const col = document.createElement('div');
+    col.className = 'game-col';
+    col.appendChild(buildCard(seatOrder[1], 'rot-180'));
+    col.appendChild(buildCard(seatOrder[0], 'rot-0'));
+    wrap.appendChild(col);
+    requestAnimationFrame(fixLateralCards);
+    return;
+  }
+
+  const layout = getLayout(n);
+  if (layout.cols && layout.cols.length > 0) {
+    const mainRow = document.createElement('div');
+    const sidesRatio = (n === 3 || n === 5) ? 2 : 1;
+    mainRow.style.cssText = `display:flex; flex:${sidesRatio}; min-height:0; overflow:hidden;`;
+    layout.cols.forEach(col => {
+      const colEl = document.createElement('div');
+      colEl.className = 'game-col';
+      col.cards.forEach(({ idx, rot }) => colEl.appendChild(buildCard(idx, rot)));
+      mainRow.appendChild(colEl);
+    });
+    wrap.appendChild(mainRow);
+  }
+  if (layout.bottom && layout.bottom.length > 0) {
+    const botRow = document.createElement('div');
+    botRow.style.cssText = 'display:flex; flex:1; min-height:0;';
+    layout.bottom.forEach(({ idx, rot }) => {
+      const card = buildCard(idx, rot);
+      card.style.flex = '1';
+      botRow.appendChild(card);
+    });
+    wrap.appendChild(botRow);
+  }
+  requestAnimationFrame(fixLateralCards);
+}
+
+function buildCard(playerIdx, rot) {
+  const p = players[playerIdx];
+  const colorClass = `color-${(playerIdx % 6) + 1}`;
+  const critClass = p.inf <= 8 && !p.eliminated ? ' crit-blink' : '';
+  const elimClass = p.eliminated ? ' elim' : '';
+  const card = document.createElement('div');
+  card.className = `pcard ${colorClass} ${rot}${critClass}${elimClass}`;
+  card.id = `card-${playerIdx}`;
+  const inner = document.createElement('div');
+  inner.className = 'card-inner';
+  inner.id = `inner-${playerIdx}`;
+
+  const cls = p.inf<=8?'crit':p.inf<=15?'low':'';
+  const playerNameHtml = p.playerName
+    ? `<div class="pplayer">${p.playerName}</div>`
+    : `<span class="pplayer-ghost"></span>`;
+
+  const zPlus = document.createElement('div');
+  zPlus.className = 'tap-zone tap-plus';
+  zPlus.innerHTML = `
+    <div class="pname">${p.name}</div>
+    <div class="prole">${p.role}</div>
+    ${playerNameHtml}
+    <span class="tap-sign">＋</span>
+  `;
+  const zMinus = document.createElement('div');
+  zMinus.className = 'tap-zone tap-minus';
+  zMinus.innerHTML = `
+    <span class="tap-sign">－</span>
+    <div class="score-wrap">
+      <span class="score ${cls}" id="sc-${playerIdx}">${p.inf}</span>
+      <span class="delta-flash" id="df-${playerIdx}"></span>
+    </div>
+  `;
+  zPlus.addEventListener('touchstart',  e=>{e.preventDefault();e.stopPropagation();adjust(playerIdx,+1,zPlus);},{passive:false});
+  zPlus.addEventListener('click',       e=>{e.stopPropagation();adjust(playerIdx,+1,zPlus);});
+  zMinus.addEventListener('touchstart', e=>{e.preventDefault();e.stopPropagation();adjust(playerIdx,-1,zMinus);},{passive:false});
+  zMinus.addEventListener('click',      e=>{e.stopPropagation();adjust(playerIdx,-1,zMinus);});
+  inner.appendChild(zPlus);
+  inner.appendChild(zMinus);
+  if (p.eliminated) { const tag=document.createElement('div'); tag.className='elim-tag'; tag.innerHTML='<div class="elim-label">Éliminé</div>'; inner.appendChild(tag); }
+  card.appendChild(inner);
+  return card;
+}
+
+function fixLateralCards() {
+  document.querySelectorAll('.rot-l .card-inner, .rot-r .card-inner').forEach(inner => {
+    const pcard = inner.parentElement;
+    const w = pcard.offsetWidth, h = pcard.offsetHeight;
+    if (w===0||h===0) return;
+    inner.style.width = h+'px'; inner.style.height = w+'px';
+  });
+}
+window.addEventListener('resize', () => { if (document.getElementById('game').style.display!=='none') fixLateralCards(); });
+
+function flashZone(zone, cls) { zone.classList.add(cls); setTimeout(()=>zone.classList.remove(cls),220); }
+
+function adjust(i, delta, zone) {
+  const p = players[i]; if (p.eliminated) return;
+  const now = Date.now();
+  // Nouvelle entrée undo à chaque action individuelle
+  saveUndo();
+  const prev = p.inf;
+  p.inf = Math.min(MAX, Math.max(0, p.inf+delta));
+  delta = p.inf - prev; // delta réel après plafonnement
+  if (delta === 0) return;
+  const sc = document.getElementById(`sc-${i}`);
+  if (sc) { sc.textContent=p.inf; sc.className='score'+(p.inf<=8?' crit':p.inf<=15?' low':''); }
+  const card = document.getElementById(`card-${i}`);
+  if (card && !p.eliminated) { if(p.inf<=8) card.classList.add('crit-blink'); else card.classList.remove('crit-blink'); }
+  flashDelta(i,delta); flashZone(zone, delta>0?'flash-pos':'flash-neg');
+  logGrouped(i,delta);
+  if (p.inf<=0&&!p.eliminated) { p.eliminated=true; setTimeout(()=>{renderGame();checkWinner();},350); }
+}
+
+function flashDelta(i,delta) {
+  const el=document.getElementById(`df-${i}`); if(!el)return;
+  el.className='delta-flash'; el.textContent=(delta>0?'+':'')+delta;
+  el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+}
+
+// ── Historique — chaque groupe a un rang d'action global ──
+function logGrouped(playerIdx, delta) {
+  const p = players[playerIdx]; const now = Date.now();
+  let group = history.find(h => h.playerIdx===playerIdx && h.open);
+  const displayName = p.playerName ? `${p.playerName} (${p.name})` : p.name;
+  if (!group) {
+    actionCounter++;
+    group = { playerIdx, who:displayName, role:p.role, entries:[], open:true, rank:actionCounter };
+    history.unshift(group);
+  }
+  group.entries.push({ delta, ts:now });
+  if (groupTimers[playerIdx]) clearTimeout(groupTimers[playerIdx]);
+  groupTimers[playerIdx] = setTimeout(()=>{ group.open=false; }, GROUP_DELAY);
+}
+
+// ── Undo : clic simple + appui long continu ──
+(function setupUndo() {
+  const btn = document.getElementById('undo-btn');
+  let interval = null, timeout = null;
+  const start = e => {
+    e.preventDefault();
+    undoLast();
+    timeout = setTimeout(() => { interval = setInterval(undoLast, 120); }, 500);
+  };
+  const stop = () => { clearTimeout(timeout); clearInterval(interval); timeout=null; interval=null; };
+  btn.addEventListener('touchstart', start, { passive: false });
+  btn.addEventListener('touchend',   stop);
+  btn.addEventListener('touchcancel',stop);
+  btn.addEventListener('mousedown',  start);
+  btn.addEventListener('mouseup',    stop);
+  btn.addEventListener('mouseleave', stop);
+})();
+
+function saveUndo() {  undoStack.push(JSON.stringify({ players, history, seatOrder, actionCounter }));
+  if (undoStack.length>30) undoStack.shift();
+  document.getElementById('undo-btn').disabled=false;
+}
+
+function undoLast() {
+  if (!undoStack.length) return;
+  const snap = JSON.parse(undoStack.pop());
+  players=snap.players; history=snap.history; seatOrder=snap.seatOrder; actionCounter=snap.actionCounter;
+  document.getElementById('undo-btn').disabled=undoStack.length===0;
+  renderGame();
+}
+
+function checkWinner() {
+  const alive = players.filter(p=>!p.eliminated);
+  if (alive.length!==1) return;
+  setTimeout(()=>{
+    const w=alive[0];
+    document.getElementById('winner-name').textContent=w.playerName||w.name;
+    document.getElementById('winner-role').textContent=w.playerName?`${w.name} · ${w.role}`:w.role;
+    document.getElementById('winner').classList.remove('hidden');
+  },500);
+}
+
+function showRecap() {
+  history.forEach(h=>{h.open=false;}); Object.values(groupTimers).forEach(clearTimeout);
+  let html='';
+  players.forEach((p,pi) => {
+    const groups = history.filter(h=>h.playerIdx===pi).sort((a,b)=>a.rank-b.rank);
+    if (!groups.length) return;
+    const totalDelta = groups.reduce((s,g)=>s+g.entries.reduce((ss,e)=>ss+e.delta,0),0);
+    const sign = totalDelta>0?'+':'';
+    html += `<div class="recap-player"><div class="recap-player-header"><div class="recap-player-name">${p.name}</div><div class="recap-player-role">${p.role}</div></div>`;
+    groups.forEach(g => {
+      const sum = g.entries.reduce((s,e)=>s+e.delta,0);
+      const cls = sum>0?'pos':sum<0?'neg':'neu';
+      const s = sum>0?'+':'';
+      // Description de l'action en termes de gain/perte d'influence
+      const absSum = Math.abs(sum);
+      let detail;
+      if (sum > 0) detail = `Gain de ${absSum} Influence`;
+      else if (sum < 0) detail = `Perte de ${absSum} Influence`;
+      else detail = `Neutre`;
+      html += `<div class="recap-entry"><div><div class="recap-entry-rank">Action n°${g.rank}</div><div class="recap-entry-detail">${detail}</div></div><div class="recap-delta ${cls}">${s}${sum}</div></div>`;
+    });
+    html += `<div class="recap-total"><div class="recap-total-label">Bilan · Influence finale</div><div class="recap-total-val">${sign}${totalDelta} · ${p.inf}</div></div></div>`;
+  });
+  if (!html) html='<div style="color:var(--muted);text-align:center;margin-top:48px;font-size:15px;font-style:italic">Aucune action enregistrée.</div>';
+  document.getElementById('recap-body').innerHTML=html;
+  document.getElementById('recap-close-btn').onclick=()=>document.getElementById('recap').classList.add('hidden');
+  document.getElementById('recap').classList.remove('hidden');
+}
+
+function backToSetup() { document.getElementById('names-screen').style.display='none'; document.getElementById('setup').style.display='flex'; }
+
+function confirmReset() {
+  ['reset-modal','winner','recap'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('game').style.display='none';
+  document.getElementById('bar').style.display='none';
+  document.getElementById('names-screen').style.display='none';
+  document.getElementById('setup').style.display='flex';
+  selected=new Set();
+  document.querySelectorAll('.lt-pick').forEach(el=>el.classList.remove('on'));
+  const btn=document.getElementById('go-btn'); btn.disabled=true; btn.textContent='Démarrer la partie';
+}
+</script>
+</body>
+</html>
