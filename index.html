@@ -12,8 +12,11 @@
 <script>
   if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{});
   document.addEventListener('contextmenu', e => e.preventDefault());
-  // Bloquer zoom multi-touch
   document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  // Service Worker — fonctionnement hors ligne
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw-ldm.js').catch(()=>{});
+  }
 </script>
 <title>La Loi du Milieu</title>
 <style>
@@ -450,9 +453,36 @@ body.day-mode .card-inner::after { opacity: 0.08; }
 .privacy-body strong{color:var(--gold);}
 .privacy-link{background:none;border:none;color:var(--muted);font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;padding:4px;opacity:0.45;margin-top:10px;text-decoration:underline;}
 .privacy-link:active{opacity:0.8;}
+
+/* ── Bouton vider les cases ── */
+.btn-vider-cases{width:100%;max-width:420px;margin-top:4px;padding:5px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:0.06em;cursor:pointer;}
+/* ── Modal confidentialité ── */
+.privacy-modal-box{max-width:440px;text-align:left;}
+.modal-icon-center{text-align:center;}
+.modal-title-privacy{text-align:center;margin-bottom:10px;}
+.privacy-intro{color:#fff;font-size:13px;margin-bottom:8px;}
+.privacy-p{margin-bottom:8px;}
+.privacy-p-last{margin-bottom:10px;}
+.btn-clear-data{margin-top:6px;padding:8px 16px;background:rgba(224,96,16,0.15);border:1px solid var(--red);border-radius:8px;color:var(--red);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.08em;cursor:pointer;}
+.privacy-date{opacity:0.4;font-size:10px;font-style:italic;}
+.btn-privacy-close{margin-top:12px;width:100%;}
+
+/* ── SPLASH ── */
+#splash{position:fixed;inset:0;z-index:9999;background:#2e2418;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity 0.5s ease;}
+#splash.hidden{opacity:0;pointer-events:none;}
+.splash-diamond{width:64px;height:64px;border:2.5px solid #f0c040;transform:rotate(45deg);animation:splashPulse 1.2s ease-in-out infinite;}
+@keyframes splashPulse{0%,100%{opacity:0.4;transform:rotate(45deg) scale(0.9)}50%{opacity:1;transform:rotate(45deg) scale(1.1)}}
+.splash-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:0.2em;color:#f0c040;opacity:0.9;}
+.splash-sub{font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.3em;color:#c8aa78;text-transform:uppercase;opacity:0.7;}
 </style>
 </head>
 <body>
+
+<div id="splash">
+  <div class="splash-diamond"></div>
+  <div class="splash-title">La Loi du Milieu</div>
+  <div class="splash-sub">Compteur d'influence</div>
+</div>
 
 <!-- ══ SETUP ══ -->
 <div id="setup">
@@ -487,7 +517,7 @@ body.day-mode .card-inner::after { opacity: 0.08; }
   <div class="profiles-list hidden" id="profiles-list"></div>
   <div id="names-list"></div>
   <button class="names-go-btn" onclick="startGame()">Lancer ▶</button>
-  <button style="width:100%;max-width:420px;margin-top:4px;padding:5px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:0.06em;cursor:pointer;" onclick="clearNameInputs()">↺ Vider les cases</button>
+  <button class="btn-vider-cases" onclick="clearNameInputs()">↺ Vider les cases</button>
   <button class="names-back-btn" onclick="backToSetup()">← Retour</button>
 </div>
 
@@ -583,22 +613,22 @@ body.day-mode .card-inner::after { opacity: 0.08; }
 
 <!-- MODAL CONFIDENTIALITÉ -->
 <div class="modal-overlay hidden" id="privacy-modal">
-  <div class="modal-box" style="max-width:440px;text-align:left;">
-    <div class="modal-icon" style="text-align:center;">🔒</div>
-    <div class="modal-title" style="text-align:center;margin-bottom:10px;">Confidentialité</div>
+  <div class="modal-box privacy-modal-box">
+    <div class="modal-icon modal-icon-center">🔒</div>
+    <div class="modal-title modal-title-privacy">Confidentialité</div>
     <div class="privacy-body">
-      <p style="color:#fff;font-size:13px;margin-bottom:8px;">La Loi du Milieu ne collecte aucune donnée personnelle.</p>
-      <p style="margin-bottom:8px;"><strong>Stockage local uniquement</strong><br>
+      <p class="privacy-intro">La Loi du Milieu ne collecte aucune donnée personnelle.</p>
+      <p class="privacy-p"><strong>Stockage local uniquement</strong><br>
       L'application utilise le stockage local de votre navigateur (localStorage) pour sauvegarder la partie en cours et les prénoms mémorisés. Ces données restent exclusivement sur votre appareil.</p>
-      <p style="margin-bottom:8px;"><strong>Aucune transmission</strong><br>
+      <p class="privacy-p"><strong>Aucune transmission</strong><br>
       Aucune donnée n'est envoyée à un serveur, partagée avec des tiers, ni utilisée à des fins publicitaires ou analytiques.</p>
-      <p style="margin-bottom:8px;"><strong>Cookies</strong><br>
+      <p class="privacy-p"><strong>Cookies</strong><br>
       L'application n'utilise pas de cookies. Le localStorage est strictement nécessaire au fonctionnement et est exempté de consentement selon le RGPD.</p>
-      <p style="margin-bottom:10px;"><strong>Effacer mes données</strong><br>
-      <button onclick="clearAllData()" style="margin-top:6px;padding:8px 16px;background:rgba(224,96,16,0.15);border:1px solid var(--red);border-radius:8px;color:var(--red);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.08em;cursor:pointer;">🗑 Supprimer toutes les données</button></p>
-      <p style="opacity:0.4;font-size:10px;font-style:italic;">Dernière mise à jour : avril 2026</p>
+      <p class="privacy-p privacy-p-last"><strong>Effacer mes données</strong><br>
+      <button class="btn-clear-data" onclick="clearAllData()">🗑 Supprimer toutes les données</button></p>
+      <p class="privacy-date">Dernière mise à jour : avril 2026</p>
     </div>
-    <button class="modal-btn secondary" style="margin-top:12px;width:100%;" onclick="document.getElementById('privacy-modal').classList.add('hidden')">Fermer</button>
+    <button class="modal-btn secondary btn-privacy-close" onclick="document.getElementById('privacy-modal').classList.add('hidden')">Fermer</button>
   </div>
 </div>
 
@@ -654,6 +684,12 @@ let actionCounter = 0; // compteur global d'actions
     g.appendChild(d);
   });
   checkRestoreBanner();
+  // Cacher le splash
+  setTimeout(()=>{
+    const s=document.getElementById('splash');
+    s.classList.add('hidden');
+    setTimeout(()=>s.remove(),500);
+  },400);
 })();
 
 function showNamesScreen() {
