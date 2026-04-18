@@ -1,0 +1,22 @@
+{
+  "name": "La Loi du Milieu",
+  "short_name": "Loi du Milieu",
+  "description": "Compteur d'influence pour La Loi du Milieu",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#2e2418",
+  "theme_color": "#2e2418",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

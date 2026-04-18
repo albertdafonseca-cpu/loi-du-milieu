@@ -33,11 +33,17 @@
 
 html, body {
   height: 100%; min-height: 100vh;
-  background: #2e2418 !important;
+  background-color: #2e2418 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%23f0c040' stroke-width='0.5' stroke-opacity='0.12'/%3E%3C/svg%3E") !important;
+  background-size: 32px 32px !important;
   color: #ffffff !important;
   font-family: 'Cinzel', Georgia, serif;
   overflow-x: hidden;
   touch-action: manipulation;
+}
+body.day-mode {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%233d2800' stroke-width='0.6' stroke-opacity='0.18'/%3E%3C/svg%3E") !important;
+  background-size: 32px 32px !important;
 }
 
 :root {
@@ -69,7 +75,7 @@ body.day-mode {
   --c1: #e8c8a0; --c2: #a8c8e8; --c3: #b8d8a8;
   --c4: #d8b8d8; --c5: #e8d888; --c6: #a8d0d8;
 }
-body.day-mode { background: #f5f0e8 !important; color: #2e2418 !important; font-weight: 700; }
+body.day-mode { background-color: #f5f0e8 !important; color: #2e2418 !important; font-weight: 700; }
 
 /* Setup : corriger les bordures/fonds hardcodés en blanc */
 body.day-mode .lt-pick { border-color: rgba(0,0,0,0.14); }
@@ -113,7 +119,7 @@ body.day-mode .score.low  { color: #7a4800; }
 body.day-mode .score.crit { color: #8b1a00; }
 body.day-mode .tap-sign-minus,
 body.day-mode .tap-sign-plus { color: rgba(0,0,0,0.55); text-shadow: none; }
-body.day-mode .delta-flash { color: #111; }
+
 body.day-mode .card-inner::before { opacity: 0.2; }
 
 /* Day/night toggle */
@@ -246,6 +252,17 @@ body.day-mode .card-inner::before { opacity: 0.2; }
   background: linear-gradient(90deg, transparent, rgba(240,192,64,0.8), transparent);
   z-index: 2; pointer-events: none;
 }
+/* Texture losanges or — mode nuit */
+:root { --card-texture-ldm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%23f0c040' stroke-width='0.8'/%3E%3C/svg%3E"); }
+.card-inner::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background-image: var(--card-texture-ldm);
+  background-size: 32px 32px;
+  opacity: 0.10;
+}
+/* Mode jour — losanges brun, plus visibles */
+body.day-mode { --card-texture-ldm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%233d2800' stroke-width='1.1'/%3E%3C/svg%3E"); }
+body.day-mode .card-inner::after { opacity: 0.08; }
 
 .rot-0 .card-inner, .rot-180 .card-inner { width: 100%; height: 100%; }
 .rot-0   .card-inner { transform: rotate(0deg); }
@@ -318,7 +335,7 @@ body.day-mode .card-inner::before { opacity: 0.2; }
 .score.crit { color: #ff8040; }
 
 
-.delta-flash { position: absolute; top: 0; right: -1.5vmin; font-family: 'Bebas Neue', sans-serif; font-size: 6vmin; font-weight: 700; opacity: 0; pointer-events: none; color: #fff; }
+.delta-flash { position: absolute; top: 0; right: -1.5vmin; font-family: 'Bebas Neue', sans-serif; font-size: 6vmin; font-weight: 700; opacity: 0; pointer-events: none; }
 .delta-flash.go { animation: flashUp 0.85s ease-out forwards; }
 @keyframes flashUp { 0%{opacity:1;transform:translateY(0)} 70%{opacity:1} 100%{opacity:0;transform:translateY(-2.5vmin)} }
 
@@ -391,29 +408,86 @@ body.day-mode .card-inner::before { opacity: 0.2; }
 .recap-total { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; background: rgba(255,255,255,0.06); border-top: 1px solid rgba(255,255,255,0.1); }
 .recap-total-label { font-size: 13px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
 .recap-total-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); }
+
+/* ── MODAL SCORE (pavé numérique) ── */
+.score-modal-overlay{position:fixed;inset:0;z-index:400;background:rgba(20,14,8,0.92);display:flex;align-items:flex-end;justify-content:center;}
+.score-modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:20px 20px 36px;width:100%;max-width:420px;box-shadow:0 -8px 40px rgba(0,0,0,0.6);}
+.score-modal-handle{width:36px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.score-modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.12em;color:var(--gold);text-align:center;margin-bottom:4px;}
+.score-modal-player{font-family:'Cinzel',serif;font-size:13px;color:var(--muted);text-align:center;margin-bottom:14px;letter-spacing:0.05em;}
+.score-modal-display{font-family:'Bebas Neue',sans-serif;font-size:56px;text-align:center;margin-bottom:16px;line-height:1;min-height:60px;letter-spacing:0.04em;}
+.score-modal-display.pos{color:var(--green);}
+.score-modal-display.neg{color:var(--red);}
+.score-modal-sign-row{display:flex;gap:8px;margin-bottom:12px;}
+.score-sign-btn{flex:1;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.08em;cursor:pointer;transition:all 0.15s;background:var(--surface2);color:var(--muted);}
+.score-sign-btn.plus.active{background:var(--green);border-color:var(--green);color:#fff;}
+.score-sign-btn.minus.active{background:var(--red);border-color:var(--red);color:#fff;}
+.score-modal-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.score-key-btn{padding:15px 8px;background:var(--surface2);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.06em;cursor:pointer;transition:all 0.12s;text-align:center;}
+.score-key-btn:active{background:rgba(240,192,64,0.15);border-color:var(--gold);}
+.score-key-btn.del{font-size:18px;color:var(--muted);}
+.score-modal-confirm-row{display:flex;gap:8px;}
+
+/* ── PROFILS JOUEURS ── */
+.profiles-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;width:100%;max-width:420px;}
+.profile-chip{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:5px 10px 5px 14px;font-family:'Cinzel',serif;font-size:12px;color:var(--gold);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s;letter-spacing:0.04em;}
+.profile-chip:active{opacity:0.7;}
+.profile-chip-del{font-size:14px;opacity:0.4;line-height:1;padding-left:2px;color:var(--muted);}
+.names-actions{display:flex;gap:8px;margin-bottom:10px;width:100%;max-width:420px;}
+.names-action-btn{flex:1;padding:9px 6px;background:var(--surface);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.06em;cursor:pointer;transition:all 0.15s;}
+.names-action-btn:active{transform:scale(0.96);}
+
+/* ── RESTORE BANNER ── */
+.restore-banner{width:100%;max-width:400px;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.3);border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+.restore-banner-text{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);line-height:1.5;letter-spacing:0.04em;}
+.restore-banner-btns{display:flex;gap:6px;flex-shrink:0;}
+.restore-btn{padding:7px 13px;border:none;border-radius:20px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.06em;cursor:pointer;}
+.restore-btn.yes{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--bg);}
+.restore-btn.no{background:var(--surface2);color:var(--muted);}
+
+/* ── CONFIDENTIALITÉ ── */
+.privacy-body{font-family:'Cinzel',serif;font-size:12px;color:var(--muted);line-height:1.8;text-align:left;}
+.privacy-body strong{color:var(--gold);}
+.privacy-link{background:none;border:none;color:var(--muted);font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;padding:4px;opacity:0.45;margin-top:10px;text-decoration:underline;}
+.privacy-link:active{opacity:0.8;}
 </style>
 </head>
 <body>
 
 <!-- ══ SETUP ══ -->
 <div id="setup">
-  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()"><span id="theme-icon">🌙</span> Nuit</button>
+  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()"><span id="theme-icon">☀️</span> Jour</button>
   <div class="brand">
     <div class="brand-title">La Loi<br>du Milieu</div>
     <div class="brand-rule"><span class="brand-rule-dot">◆</span></div>
     <div class="brand-sub">Compteur d'influence</div>
   </div>
+  <div class="restore-banner hidden" id="restore-banner">
+    <div class="restore-banner-text">🎮 Partie en cours<br>sauvegardée</div>
+    <div class="restore-banner-btns">
+      <button class="restore-btn yes" onclick="restoreGame()">Reprendre</button>
+      <button class="restore-btn no" onclick="discardSave()">Effacer</button>
+    </div>
+  </div>
   <div class="section-label">Choisir les Capos<br>dans l'ordre du tour<br>2 à 6 joueurs</div>
   <div class="lt-grid" id="lt-grid"></div>
   <button class="go-btn" id="go-btn" disabled onclick="showNamesScreen()">Démarrer la partie</button>
+  <button class="privacy-link" onclick="showPrivacy()">🔒 Confidentialité</button>
 </div>
 
 <!-- ══ NAMES SCREEN ══ -->
 <div id="names-screen">
   <div class="names-title">Qui joue qui ?</div>
   <div class="names-sub">Optionnel — laissez vide pour jouer sans prénom</div>
+  <div class="names-actions">
+    <button class="names-action-btn" onclick="shuffleNames()">🔀 Mélanger</button>
+    <button class="names-action-btn" onclick="saveProfiles()">💾 Mémoriser</button>
+    <button class="names-action-btn" onclick="clearSavedNames()">✕ Effacer</button>
+  </div>
+  <div class="profiles-list hidden" id="profiles-list"></div>
   <div id="names-list"></div>
   <button class="names-go-btn" onclick="startGame()">Lancer ▶</button>
+  <button style="width:100%;max-width:420px;margin-top:4px;padding:5px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:0.06em;cursor:pointer;" onclick="clearNameInputs()">↺ Vider les cases</button>
   <button class="names-back-btn" onclick="backToSetup()">← Retour</button>
 </div>
 
@@ -488,6 +562,46 @@ body.day-mode .card-inner::before { opacity: 0.2; }
   <div id="recap-body"></div>
 </div>
 
+<!-- MODAL SCORE -->
+<div class="score-modal-overlay hidden" id="score-modal">
+  <div class="score-modal-box">
+    <div class="score-modal-handle"></div>
+    <div class="score-modal-title">Modifier l'Influence</div>
+    <div class="score-modal-player" id="score-modal-player"></div>
+    <div class="score-modal-display pos" id="score-modal-display">+0</div>
+    <div class="score-modal-sign-row">
+      <button class="score-sign-btn minus" id="sign-minus" onclick="setScoreSign(-1)">－ Perte</button>
+      <button class="score-sign-btn plus active" id="sign-plus" onclick="setScoreSign(1)">＋ Gain</button>
+    </div>
+    <div class="score-modal-keypad" id="score-modal-keypad"></div>
+    <div class="score-modal-confirm-row">
+      <button class="modal-btn secondary" onclick="closeScoreModal()">Annuler</button>
+      <button class="modal-btn primary" onclick="confirmScoreModal()">Appliquer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIDENTIALITÉ -->
+<div class="modal-overlay hidden" id="privacy-modal">
+  <div class="modal-box" style="max-width:440px;text-align:left;">
+    <div class="modal-icon" style="text-align:center;">🔒</div>
+    <div class="modal-title" style="text-align:center;margin-bottom:10px;">Confidentialité</div>
+    <div class="privacy-body">
+      <p style="color:#fff;font-size:13px;margin-bottom:8px;">La Loi du Milieu ne collecte aucune donnée personnelle.</p>
+      <p style="margin-bottom:8px;"><strong>Stockage local uniquement</strong><br>
+      L'application utilise le stockage local de votre navigateur (localStorage) pour sauvegarder la partie en cours et les prénoms mémorisés. Ces données restent exclusivement sur votre appareil.</p>
+      <p style="margin-bottom:8px;"><strong>Aucune transmission</strong><br>
+      Aucune donnée n'est envoyée à un serveur, partagée avec des tiers, ni utilisée à des fins publicitaires ou analytiques.</p>
+      <p style="margin-bottom:8px;"><strong>Cookies</strong><br>
+      L'application n'utilise pas de cookies. Le localStorage est strictement nécessaire au fonctionnement et est exempté de consentement selon le RGPD.</p>
+      <p style="margin-bottom:10px;"><strong>Effacer mes données</strong><br>
+      <button onclick="clearAllData()" style="margin-top:6px;padding:8px 16px;background:rgba(224,96,16,0.15);border:1px solid var(--red);border-radius:8px;color:var(--red);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.08em;cursor:pointer;">🗑 Supprimer toutes les données</button></p>
+      <p style="opacity:0.4;font-size:10px;font-style:italic;">Dernière mise à jour : avril 2026</p>
+    </div>
+    <button class="modal-btn secondary" style="margin-top:12px;width:100%;" onclick="document.getElementById('privacy-modal').classList.add('hidden')">Fermer</button>
+  </div>
+</div>
+
 <!-- KILLER SELECT -->
 <div class="modal-overlay hidden" id="killer-modal">
   <div class="modal-box">
@@ -517,6 +631,8 @@ const LTS = [
 ];
 
 const MAX = 40, GROUP_DELAY = 1500;
+const SAVE_KEY = 'ldm_save';
+const PROFILES_KEY = 'ldm_profiles';
 let selected = new Set(), players=[], undoStack=[], history=[], groupTimers={}, lastUndoTime={};
 let seatOrder = []; // indices dans players[], dans l'ordre des sièges
 let actionCounter = 0; // compteur global d'actions
@@ -537,21 +653,28 @@ let actionCounter = 0; // compteur global d'actions
     };
     g.appendChild(d);
   });
+  checkRestoreBanner();
 })();
 
 function showNamesScreen() {
+  _lastFocusedInput = null;
   const list = document.getElementById('names-list');
   list.innerHTML = '';
   [...selected].forEach(id => {
     const lt = LTS.find(l => l.id === id);
     const row = document.createElement('div');
     row.className = 'name-row';
-    row.innerHTML = `
-      <div class="name-lt">${lt.name}<br><span class="name-lt-role">${lt.role}</span></div>
-      <input class="name-input" type="text" placeholder="Prénom du joueur" data-id="${id}" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
-    `;
+    const inp = document.createElement('input');
+    inp.className = 'name-input'; inp.type = 'text'; inp.placeholder = 'Prénom du joueur';
+    inp.dataset.id = id; inp.maxLength = 20; inp.autocomplete = 'off';
+    inp.autocorrect = 'off'; inp.autocapitalize = 'words'; inp.spellcheck = false;
+    inp.addEventListener('focus', () => { _lastFocusedInput = inp; });
+    inp.addEventListener('touchstart', () => { _lastFocusedInput = inp; }, { passive: true });
+    row.innerHTML = `<div class="name-lt">${lt.name}<br><span class="name-lt-role">${lt.role}</span></div>`;
+    row.appendChild(inp);
     list.appendChild(row);
   });
+  renderProfileChips();
   setTimeout(() => { const f = list.querySelector('input'); if (f) f.focus(); }, 100);
   document.getElementById('setup').style.display = 'none';
   document.getElementById('names-screen').style.display = 'flex';
@@ -563,12 +686,13 @@ function startGame() {
     const lt = LTS.find(l => l.id === id);
     return { id: lt.id, name: lt.name, role: lt.role, playerName: inputs[i]?.value.trim()||'', inf: MAX, eliminated: false };
   });
-  seatOrder = players.map((_,i) => i); // sièges initiaux = ordre de sélection
+  seatOrder = players.map((_,i) => i);
   undoStack=[]; history=[]; groupTimers={}; lastUndoTime={}; actionCounter=0;
   document.getElementById('names-screen').style.display='none';
   document.getElementById('game').style.display='flex';
   document.getElementById('bar').style.display='flex';
   renderGame();
+  saveGame();
 }
 
 // ── Rotation des sièges ──
@@ -669,32 +793,27 @@ function buildCard(playerIdx, rot) {
     <span class="tap-sign-plus">＋</span>
   `;
 
-  const handleTap = (e, isTouch) => {
-    if (isTouch) { e.preventDefault(); e.stopPropagation(); }
-    else e.stopPropagation();
-    // On prend le rect du pcard (non transformé) pour avoir les vraies coordonnées écran
+  const getIsPlus = (e, isTouch) => {
     const rect = card.getBoundingClientRect();
     const clientX = isTouch ? e.changedTouches[0].clientX : e.clientX;
     const clientY = isTouch ? e.changedTouches[0].clientY : e.clientY;
-    let isPlus;
-    if (rot === 'rot-l') {
-      // Pivoté +90° (antihoraire) : tête→droite, pieds→gauche, main droite→bas écran
-      isPlus = (clientY - rect.top) >= rect.height / 2;
-    } else if (rot === 'rot-r') {
-      // Pivoté -90° (horaire) : tête→gauche, pieds→droite, main droite→haut écran
-      isPlus = (clientY - rect.top) < rect.height / 2;
-    } else if (rot === 'rot-180') {
-      // Joueur retourné : sa droite = gauche écran
-      isPlus = (clientX - rect.left) < rect.width / 2;
-    } else {
-      // rot-0 : normal, droite = droite écran
-      isPlus = (clientX - rect.left) >= rect.width / 2;
-    }
-    const delta = isPlus ? +1 : -1;
-    adjust(playerIdx, delta, zone, delta > 0 ? 'flash-pos' : 'flash-neg');
+    if (rot === 'rot-l')   return (clientY - rect.top) >= rect.height / 2;
+    if (rot === 'rot-r')   return (clientY - rect.top) < rect.height / 2;
+    if (rot === 'rot-180') return (clientX - rect.left) < rect.width / 2;
+    return (clientX - rect.left) >= rect.width / 2;
   };
-  zone.addEventListener('touchstart', e => handleTap(e, true), { passive: false });
-  zone.addEventListener('click',      e => handleTap(e, false));
+  let holdTimer = null, didHold = false;
+  zone.addEventListener('touchstart', e => {
+    e.preventDefault(); e.stopPropagation();
+    didHold = false;
+    holdTimer = setTimeout(() => { didHold = true; holdTimer = null; openScoreModal(playerIdx); }, 450);
+  }, { passive: false });
+  zone.addEventListener('touchend', e => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    if (!didHold) adjust(playerIdx, getIsPlus(e, true) ? +1 : -1, zone, getIsPlus(e, true) ? 'flash-pos' : 'flash-neg');
+  });
+  zone.addEventListener('touchcancel', () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } });
+  zone.addEventListener('click', e => adjust(playerIdx, getIsPlus(e, false) ? +1 : -1, zone, getIsPlus(e, false) ? 'flash-pos' : 'flash-neg'));
 
   inner.appendChild(zone);
   if (p.eliminated) { const tag=document.createElement('div'); tag.className='elim-tag'; tag.innerHTML='<div class="elim-label">Éliminé</div>'; inner.appendChild(tag); }
@@ -755,9 +874,10 @@ function adjust(i, delta, zone, flashCls) {
   if (sc) { sc.textContent=p.inf; sc.className='score'+(p.inf<=8?' crit':p.inf<=15?' low':'')+(p.inf<=8&&!p.eliminated?' crit-blink':''); }
   const card = document.getElementById(`card-${i}`);
   if (card && !p.eliminated) { card.classList.remove('crit-blink'); }
-  flashDelta(i,delta); flashZone(zone, flashCls||(delta>0?'flash-pos':'flash-neg'));
+  flashZone(zone, flashCls||(delta>0?'flash-pos':'flash-neg'));
   logGrouped(i,delta);
   if (p.inf<=0&&!p.eliminated) { p.eliminated=true; setTimeout(()=>{renderGame(); showKillerModal(i); },350); }
+  else { saveGame(); }
 }
 
 function showKillerModal(eliminatedIdx) {
@@ -810,15 +930,20 @@ function showKillerModal(eliminatedIdx) {
 
 function toggleTheme() {
   const isDay = document.body.classList.toggle('day-mode');
-  document.getElementById('theme-icon').textContent = isDay ? '☀️' : '🌙';
-  document.getElementById('theme-btn').childNodes[1].textContent = isDay ? ' Jour' : ' Nuit';
+  document.getElementById('theme-icon').textContent = isDay ? '🌙' : '☀️';
+  document.getElementById('theme-btn').childNodes[1].textContent = isDay ? ' Nuit' : ' Jour';
   // Recalculer les tailles de texte avec les nouvelles font-size CSS
   requestAnimationFrame(fitTexts);
 }
 
-function flashDelta(i,delta) {
-  const el=document.getElementById(`df-${i}`); if(!el)return;
-  el.className='delta-flash'; el.textContent=(delta>0?'+':'')+delta;
+function flashDelta(i, groupSum) {
+  const el = document.getElementById(`df-${i}`); if (!el) return;
+  const isDay = document.body.classList.contains('day-mode');
+  const colorPos = isDay ? '#228833' : '#66CCEE'; // Tol vert / cyan
+  const colorNeg = isDay ? '#CC3311' : '#EE6677'; // Tol rouge sombre / rose
+  el.style.color = groupSum > 0 ? colorPos : colorNeg;
+  el.className = 'delta-flash';
+  el.textContent = (groupSum > 0 ? '+' : '') + groupSum;
   el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
 }
 
@@ -833,6 +958,9 @@ function logGrouped(playerIdx, delta) {
     history.unshift(group);
   }
   group.entries.push({ delta, ts:now });
+  // Afficher le cumul du groupe en cours
+  const sum = group.entries.reduce((s, e) => s + e.delta, 0);
+  flashDelta(playerIdx, sum);
   if (groupTimers[playerIdx]) clearTimeout(groupTimers[playerIdx]);
   groupTimers[playerIdx] = setTimeout(()=>{ group.open=false; }, GROUP_DELAY);
 }
@@ -924,7 +1052,8 @@ function showRecap() {
 function backToSetup() { document.getElementById('names-screen').style.display='none'; document.getElementById('setup').style.display='flex'; }
 
 function confirmReset() {
-  ['reset-modal','winner','recap'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  localStorage.removeItem(SAVE_KEY);
+  ['reset-modal','winner','recap','score-modal','privacy-modal'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.add('hidden'); });
   document.getElementById('game').style.display='none';
   document.getElementById('bar').style.display='none';
   document.getElementById('names-screen').style.display='none';
@@ -932,7 +1061,172 @@ function confirmReset() {
   selected=new Set();
   document.querySelectorAll('.lt-pick').forEach(el=>el.classList.remove('on'));
   const btn=document.getElementById('go-btn'); btn.disabled=true; btn.textContent='Démarrer la partie';
+  checkRestoreBanner();
 }
+
+// ── SAUVEGARDE DE PARTIE ──────────────────────────────────────────
+function saveGame() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      players, seatOrder, history, actionCounter, ts: Date.now()
+    }));
+  } catch(e) {}
+}
+function restoreGame() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if (!s) return;
+    players = s.players; seatOrder = s.seatOrder; history = s.history; actionCounter = s.actionCounter;
+    undoStack = []; groupTimers = {};
+    document.getElementById('restore-banner').classList.add('hidden');
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('names-screen').style.display = 'none';
+    document.getElementById('game').style.display = 'flex';
+    document.getElementById('bar').style.display = 'flex';
+    renderGame();
+  } catch(e) { discardSave(); }
+}
+function discardSave() {
+  localStorage.removeItem(SAVE_KEY);
+  document.getElementById('restore-banner').classList.add('hidden');
+}
+function checkRestoreBanner() {
+  if (localStorage.getItem(SAVE_KEY)) {
+    document.getElementById('restore-banner').classList.remove('hidden');
+  }
+}
+
+// ── PROFILS JOUEURS ───────────────────────────────────────────────
+function loadProfiles() {
+  try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveProfiles() {
+  const inputs = document.querySelectorAll('.name-input');
+  const names = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+  if (!names.length) return;
+  let profiles = loadProfiles();
+  names.forEach(n => { if (!profiles.includes(n)) profiles.push(n); });
+  if (profiles.length > 30) profiles = profiles.slice(-30);
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+  renderProfileChips();
+}
+function renderProfileChips() {
+  const profiles = loadProfiles();
+  const list = document.getElementById('profiles-list');
+  list.innerHTML = '';
+  if (!profiles.length) { list.classList.add('hidden'); return; }
+  list.classList.remove('hidden');
+  profiles.forEach(name => {
+    const chip = document.createElement('div');
+    chip.className = 'profile-chip';
+    chip.innerHTML = `<span>${name}</span><span class="profile-chip-del" onclick="event.stopPropagation();deleteProfile('${name.replace(/'/g,"\'")}')">✕</span>`;
+    chip.onclick = () => fillProfileName(name);
+    list.appendChild(chip);
+  });
+}
+let _lastFocusedInput = null;
+function fillProfileName(name) {
+  const inputs = [...document.querySelectorAll('.name-input')];
+  if (_lastFocusedInput && inputs.includes(_lastFocusedInput)) {
+    _lastFocusedInput.value = name; _lastFocusedInput.focus(); return;
+  }
+  const empty = inputs.find(inp => !inp.value.trim());
+  if (empty) { empty.value = name; empty.focus(); }
+}
+function deleteProfile(name) {
+  const profiles = loadProfiles().filter(p => p !== name);
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+  renderProfileChips();
+}
+function clearSavedNames() {
+  localStorage.removeItem(PROFILES_KEY);
+  document.getElementById('profiles-list').innerHTML = '';
+  document.getElementById('profiles-list').classList.add('hidden');
+}
+function clearNameInputs() {
+  document.querySelectorAll('.name-input').forEach(i => i.value = '');
+}
+function shuffleNames() {
+  const inputs = [...document.querySelectorAll('.name-input')];
+  const vals = inputs.map(i => i.value);
+  for (let i = vals.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [vals[i], vals[j]] = [vals[j], vals[i]]; }
+  inputs.forEach((inp, i) => inp.value = vals[i]);
+}
+
+// ── MODAL SCORE (pavé numérique) ─────────────────────────────────
+let _modalPlayerIdx = -1, _modalValue = '0', _modalSign = 1;
+
+function openScoreModal(pi) {
+  const openGroup = history.find(h => h.playerIdx === pi && h.open);
+  if (openGroup) { openGroup.open = false; if (groupTimers[pi]) { clearTimeout(groupTimers[pi]); delete groupTimers[pi]; } }
+  const p = players[pi];
+  _modalPlayerIdx = pi; _modalValue = '0'; _modalSign = 1;
+  document.getElementById('score-modal-player').textContent =
+    (p.playerName ? `${p.playerName} · ` : '') + p.name + ' — ' + p.inf + ' Influence';
+  updateScoreModalDisplay();
+  document.getElementById('sign-plus').classList.add('active');
+  document.getElementById('sign-minus').classList.remove('active');
+  document.getElementById('score-modal').classList.remove('hidden');
+}
+function closeScoreModal() { document.getElementById('score-modal').classList.add('hidden'); }
+function setScoreSign(s) {
+  _modalSign = s;
+  document.getElementById('sign-plus').classList.toggle('active', s === 1);
+  document.getElementById('sign-minus').classList.toggle('active', s === -1);
+  updateScoreModalDisplay();
+}
+function pressScoreKey(k) {
+  if (k === '⌫') _modalValue = _modalValue.length > 1 ? _modalValue.slice(0, -1) : '0';
+  else if (k === '00') _modalValue = _modalValue === '0' ? '0' : _modalValue + '00';
+  else _modalValue = _modalValue === '0' ? String(k) : _modalValue + k;
+  if (_modalValue.length > 3) _modalValue = _modalValue.slice(0, 3); // max 40
+  updateScoreModalDisplay();
+}
+function updateScoreModalDisplay() {
+  const v = parseInt(_modalValue) || 0;
+  const el = document.getElementById('score-modal-display');
+  el.textContent = (_modalSign === 1 ? '+' : '−') + v;
+  el.className = 'score-modal-display' + (_modalSign === 1 ? ' pos' : ' neg');
+}
+function confirmScoreModal() {
+  const v = parseInt(_modalValue) || 0;
+  if (v === 0) { closeScoreModal(); return; }
+  const delta = _modalSign * v;
+  saveUndo();
+  const p = players[_modalPlayerIdx];
+  const prev = p.inf;
+  p.inf = Math.min(MAX, Math.max(0, p.inf + delta));
+  const realDelta = p.inf - prev;
+  if (realDelta === 0) { closeScoreModal(); return; }
+  const sc = document.getElementById(`sc-${_modalPlayerIdx}`);
+  if (sc) { sc.textContent = p.inf; sc.className = 'score' + (p.inf <= 8 ? ' crit' : p.inf <= 15 ? ' low' : '') + (p.inf <= 8 && !p.eliminated ? ' crit-blink' : ''); }
+  flashDelta(_modalPlayerIdx, realDelta);
+  actionCounter++;
+  history.unshift({ playerIdx: _modalPlayerIdx, who: p.playerName || p.name, role: p.role, entries: [{ delta: realDelta, ts: Date.now() }], open: false, rank: actionCounter });
+  saveGame();
+  closeScoreModal();
+}
+(function buildScoreKeypad() {
+  const kp = document.getElementById('score-modal-keypad');
+  [1,2,3,4,5,6,7,8,9,'⌫',0,'00'].forEach(k => {
+    const b = document.createElement('button');
+    b.className = 'score-key-btn' + (k === '⌫' ? ' del' : '');
+    b.textContent = k;
+    b.addEventListener('touchstart', e => { e.preventDefault(); pressScoreKey(k); }, { passive: false });
+    b.onclick = () => pressScoreKey(k);
+    kp.appendChild(b);
+  });
+})();
+
+// ── CONFIDENTIALITÉ ───────────────────────────────────────────────
+function showPrivacy() { document.getElementById('privacy-modal').classList.remove('hidden'); }
+function clearAllData() {
+  localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem(PROFILES_KEY);
+  document.getElementById('privacy-modal').classList.add('hidden');
+  confirmReset();
+}
+
 </script>
 </body>
 </html>
