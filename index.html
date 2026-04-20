@@ -481,7 +481,7 @@ body.day-mode .card-inner::after { opacity: 0.08; }
 <div id="splash">
   <div class="splash-diamond"></div>
   <div class="splash-title">La Loi du Milieu</div>
-  <div class="splash-sub">Compteur d'influence</div>
+  <div class="splash-sub">Compteur d'influence · v2.3</div>
 </div>
 
 <!-- ══ SETUP ══ -->
@@ -490,7 +490,7 @@ body.day-mode .card-inner::after { opacity: 0.08; }
   <div class="brand">
     <div class="brand-title">La Loi<br>du Milieu</div>
     <div class="brand-rule"><span class="brand-rule-dot">◆</span></div>
-    <div class="brand-sub">Compteur d'influence</div>
+    <div class="brand-sub">Compteur d'influence · v2.3</div>
   </div>
   <div class="restore-banner hidden" id="restore-banner">
     <div class="restore-banner-text">🎮 Partie en cours<br>sauvegardée</div>
@@ -905,13 +905,13 @@ function adjust(i, delta, zone, flashCls) {
   const prev = p.inf;
   p.inf = Math.min(MAX, Math.max(0, p.inf+delta));
   delta = p.inf - prev;
-  if (delta === 0) return;
+  // Si delta === 0 mais p.inf est à 0 sans élimination, laisser passer pour déclencher l'élim
+  if (delta === 0 && !(p.inf <= 0 && !p.eliminated)) return;
   const sc = document.getElementById(`sc-${i}`);
   if (sc) { sc.textContent=p.inf; sc.className='score'+(p.inf<=8?' crit':p.inf<=15?' low':'')+(p.inf<=8&&!p.eliminated?' crit-blink':''); }
   const card = document.getElementById(`card-${i}`);
   if (card && !p.eliminated) { card.classList.remove('crit-blink'); }
-  flashZone(zone, flashCls||(delta>0?'flash-pos':'flash-neg'));
-  logGrouped(i,delta);
+  if (delta !== 0) { flashZone(zone, flashCls||(delta>0?'flash-pos':'flash-neg')); logGrouped(i,delta); }
   if (p.inf<=0&&!p.eliminated) { p.eliminated=true; saveGame(); setTimeout(()=>{renderGame(); showKillerModal(i); },350); }
   else { saveGame(); }
 }
@@ -1233,12 +1233,15 @@ function confirmScoreModal() {
   const prev = p.inf;
   p.inf = Math.min(MAX, Math.max(0, p.inf + delta));
   const realDelta = p.inf - prev;
-  if (realDelta === 0) { closeScoreModal(); return; }
+  // Si realDelta === 0 mais que p.inf est à 0 et le joueur pas éliminé, on continue quand même
+  if (realDelta === 0 && !(p.inf <= 0 && !p.eliminated)) { closeScoreModal(); return; }
   const sc = document.getElementById(`sc-${_modalPlayerIdx}`);
   if (sc) { sc.textContent = p.inf; sc.className = 'score' + (p.inf <= 8 ? ' crit' : p.inf <= 15 ? ' low' : '') + (p.inf <= 8 && !p.eliminated ? ' crit-blink' : ''); }
-  flashDelta(_modalPlayerIdx, realDelta);
-  actionCounter++;
-  history.unshift({ playerIdx: _modalPlayerIdx, who: p.playerName || p.name, role: p.role, entries: [{ delta: realDelta, ts: Date.now() }], open: false, rank: actionCounter });
+  if (realDelta !== 0) {
+    flashDelta(_modalPlayerIdx, realDelta);
+    actionCounter++;
+    history.unshift({ playerIdx: _modalPlayerIdx, who: p.playerName || p.name, role: p.role, entries: [{ delta: realDelta, ts: Date.now() }], open: false, rank: actionCounter });
+  }
   closeScoreModal();
   if (p.inf <= 0 && !p.eliminated) {
     p.eliminated = true;
