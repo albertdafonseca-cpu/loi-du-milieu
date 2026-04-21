@@ -44,7 +44,14 @@
   user-select: none;
 }
 
-html, body {
+html {
+  min-height: 100%;
+  overflow-x: hidden;
+  background-color: #2e2418;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%23f0c040' stroke-width='0.5' stroke-opacity='0.12'/%3E%3C/svg%3E");
+  background-size: 32px 32px;
+}
+body {
   min-height: 100dvh;
   overflow-x: hidden;
   background-color: #2e2418 !important;
@@ -54,6 +61,11 @@ html, body {
   font-family: 'Cinzel', Georgia, serif;
   touch-action: manipulation;
 }
+/* Couvre les bandes safe-area iOS avec la couleur du thème */
+body::before { content:''; position:fixed; top:0; left:0; right:0; height:env(safe-area-inset-top,0px); background:#2e2418; z-index:200; }
+body::after  { content:''; position:fixed; bottom:0; left:0; right:0; height:env(safe-area-inset-bottom,0px); background:#2e2418; z-index:200; }
+body.day-mode::before { background:#f5f0e8; }
+body.day-mode::after  { background:#f5f0e8; }
 body.day-mode {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%233d2800' stroke-width='0.6' stroke-opacity='0.18'/%3E%3C/svg%3E") !important;
   background-size: 32px 32px !important;
@@ -137,20 +149,20 @@ body.day-mode .card-inner::before { opacity: 0.2; }
 
 /* Day/night toggle */
 .theme-toggle {
-  position: absolute; top: 16px; right: 0;
+  position: absolute; top: 0; right: 0;
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 20px; padding: 6px 14px;
+  border-radius: 20px; padding: 6px 14px; margin-top: 20px;
   font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.1em;
   color: var(--muted); cursor: pointer; transition: all 0.2s;
   display: flex; align-items: center; gap: 6px;
-  z-index: 100;
+  z-index: 300;
 }
 .theme-toggle:active { transform: scale(0.97); }
 .setup-inner {
   position: relative;
   width: 100%; max-width: 440px;
   display: flex; flex-direction: column; align-items: center;
-  padding-top: 16px;
+  padding-top: calc(env(safe-area-inset-top,44px) + 16px);
 }
 
 /* ══ SETUP ══ */
@@ -160,7 +172,7 @@ body.day-mode .card-inner::before { opacity: 0.2; }
   padding: 0 24px 24px;
   overflow-x: hidden;
 }
-.brand { text-align: center; margin-bottom: 20px; padding-top: 24px; }
+.brand { text-align: center; margin-bottom: 20px; padding-top: calc(env(safe-area-inset-top,44px) + 28px); }
 .brand-title {
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(44px,12vw,64px);
