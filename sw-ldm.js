@@ -1,5 +1,10 @@
-const CACHE = 'ldm-v1';
-const FONTS_CACHE = 'ldm-fonts-v1';
+// ─────────────────────────────────────────────────────────────────
+//  La Loi du Milieu — Service Worker
+//  ⚠️  Incrémenter CACHE_VERSION à chaque déploiement
+//      → invalide le cache sur tous les appareils
+// ─────────────────────────────────────────────────────────────────
+const CACHE_VERSION = 'ldm-v24';
+const FONTS_CACHE   = 'ldm-fonts-v1';  // polices : mise à jour rare
 
 const STATIC = [
   './',
@@ -10,27 +15,37 @@ const STATIC = [
 
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
-// Installation — mise en cache des fichiers statiques
+// ── Installation ──────────────────────────────────────────────────
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(STATIC)).then(() => self.skipWaiting())
+    caches.open(CACHE_VERSION)
+      .then(cache => cache.addAll(STATIC))
+      .then(() => self.skipWaiting())
   );
 });
 
-// Activation — nettoyage des anciens caches
+// ── Activation ────────────────────────────────────────────────────
 self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE && k !== FONTS_CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys
+        .filter(k => k !== CACHE_VERSION && k !== FONTS_CACHE)
+        .map(k => caches.delete(k))
+    );
+    await self.clients.claim();
+    const clients = await self.clients.matchAll({ type: 'window' });
+    clients.forEach(c => c.postMessage({ type: 'SW_UPDATED', version: CACHE_VERSION }));
+  })());
 });
 
-// Fetch — stratégie hybride
+// ── Fetch ─────────────────────────────────────────────────────────
 self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+
   const url = new URL(e.request.url);
 
-  // Polices : cache-first, puis réseau (mise en cache à la volée)
+  // Polices Google : cache-first
   if (FONT_HOSTS.includes(url.hostname)) {
     e.respondWith(
       caches.open(FONTS_CACHE).then(cache =>
@@ -46,16 +61,16 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Fichiers statiques : cache-first, puis réseau
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
-        if (res.ok) {
-          caches.open(CACHE).then(cache => cache.put(e.request, res.clone()));
-        }
-        return res;
-      }).catch(() => cached || new Response('Hors ligne', { status: 503 }));
-    })
-  );
+  // Tout le reste : network-first
+  e.respondWith((async () => {
+    const cache = await caches.open(CACHE_VERSION);
+    try {
+      const res = await fetch(e.request);
+      if (res.ok) cache.put(e.request, res.clone());
+      return res;
+    } catch {
+      return (await cache.match(e.request))
+        || new Response('Hors ligne', { status: 503 });
+    }
+  })());
 });

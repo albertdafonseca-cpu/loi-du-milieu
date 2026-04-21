@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Loi du Milieu">
@@ -13,16 +13,26 @@
   if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{});
   document.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
-  // Service Worker — fonctionnement hors ligne
+  // Service Worker — fonctionnement hors ligne + mise à jour automatique
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw-ldm.js').catch(()=>{});
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data?.type === 'SW_UPDATED') {
+        const b = document.createElement('div');
+        b.id = 'update-banner';
+        b.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#f0c040;color:#2e2418;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:0.15em;padding:10px 22px;border-radius:30px;z-index:9999;cursor:pointer;box-shadow:0 4px 20px rgba(240,192,64,0.4);white-space:nowrap;';
+        b.textContent = '↻  MISE À JOUR DISPONIBLE';
+        b.onclick = () => location.reload();
+        document.body.appendChild(b);
+      }
+    });
   }
 </script>
 <title>La Loi du Milieu</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Bebas+Neue&family=Playfair+Display:wght@700&display=swap');
 
-@media screen and (orientation: landscape) {
+@media screen and (orientation: landscape) and (max-width: 768px) {
   body { transform: rotate(90deg); transform-origin: left top; width: 100vh; height: 100vw; overflow: hidden; position: absolute; top: 0; left: 100%; }
 }
 
@@ -35,13 +45,13 @@
 }
 
 html, body {
-  height: 100%; min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
   background-color: #2e2418 !important;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%23f0c040' stroke-width='0.5' stroke-opacity='0.12'/%3E%3C/svg%3E") !important;
   background-size: 32px 32px !important;
   color: #ffffff !important;
   font-family: 'Cinzel', Georgia, serif;
-  overflow-x: hidden;
   touch-action: manipulation;
 }
 body.day-mode {
@@ -127,22 +137,30 @@ body.day-mode .card-inner::before { opacity: 0.2; }
 
 /* Day/night toggle */
 .theme-toggle {
-  position: absolute; top: 16px; right: 20px;
+  position: absolute; top: 16px; right: 0;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 20px; padding: 6px 14px;
   font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.1em;
   color: var(--muted); cursor: pointer; transition: all 0.2s;
   display: flex; align-items: center; gap: 6px;
+  z-index: 100;
 }
 .theme-toggle:active { transform: scale(0.97); }
+.setup-inner {
+  position: relative;
+  width: 100%; max-width: 440px;
+  display: flex; flex-direction: column; align-items: center;
+  padding-top: 16px;
+}
 
 /* ══ SETUP ══ */
 #setup {
   display: flex; flex-direction: column; align-items: center;
-  min-height: 100vh; padding: 52px 24px 72px; overflow-y: auto;
-  position: relative;
+  min-height: 100dvh;
+  padding: 0 24px 24px;
+  overflow-x: hidden;
 }
-.brand { text-align: center; margin-bottom: 20px; }
+.brand { text-align: center; margin-bottom: 20px; padding-top: 24px; }
 .brand-title {
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(44px,12vw,64px);
@@ -190,7 +208,9 @@ body.day-mode .card-inner::before { opacity: 0.2; }
 /* ══ NAMES SCREEN ══ */
 #names-screen {
   display: none; flex-direction: column; align-items: center;
-  min-height: 100vh; padding: 44px 20px 72px; gap: 14px; overflow-y: auto;
+  min-height: 100dvh;
+  padding: 24px 20px 24px;
+  gap: 14px; overflow-x: hidden;
 }
 .names-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 6px; text-align: center; }
 .names-sub { font-family: 'Cinzel', serif; font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 10px; text-align: center; letter-spacing: 0.05em; }
@@ -224,12 +244,12 @@ body.day-mode .card-inner::before { opacity: 0.2; }
 }
 .game-header {
   display: flex; align-items: center; justify-content: center;
-  padding: 12px 16px 10px; border-bottom: 1px solid var(--border);
-  background: var(--bg2); flex-shrink: 0; height: 46px;
+  padding: calc(12px + env(safe-area-inset-top,0px)) 16px 10px; border-bottom: 1px solid var(--border);
+  background: var(--bg2); flex-shrink: 0; height: calc(46px + env(safe-area-inset-top,0px));
 }
 .game-header-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.15em; color: var(--gold); }
 
-.players-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding-bottom: 68px; }
+.players-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding-bottom: calc(68px + env(safe-area-inset-bottom,0px)); }
 
 .game-col { display: flex; flex-direction: column; flex: 1; }
 
@@ -349,8 +369,8 @@ body.day-mode .card-inner::after { opacity: 0.08; }
 #bar {
   display: none; position: fixed; bottom: 0; left: 0; right: 0;
   background: var(--bg2); border-top: 1px solid var(--border);
-  padding: 6px 6px 14px; gap: 5px; z-index: 100;
-  align-items: center; justify-content: center; height: 68px;
+  padding: 6px 6px calc(14px + env(safe-area-inset-bottom,0px)); gap: 5px; z-index: 100;
+  align-items: center; justify-content: center; height: calc(68px + env(safe-area-inset-bottom,0px));
 }
 .bar-btn {
   flex: 1; max-width: 110px; padding: 7px 4px 6px;
@@ -386,12 +406,12 @@ body.day-mode .card-inner::after { opacity: 0.08; }
 .killer-btn-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
 
 /* ══ RÈGLES ══ */
-.rules { position: fixed; inset: 0; z-index: 300; background: var(--bg2); overflow-y: auto; padding-bottom: 40px; }
+.rules { position: fixed; inset: 0; z-index: 300; background: var(--bg2); overflow-y: auto; padding-bottom: calc(40px + env(safe-area-inset-bottom,0px)); }
 .rules-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 16px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg2); z-index: 1; }
 .rules-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.15em; color: var(--gold); }
 .rules-close { background: var(--surface2); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .rules-body { padding: 32px 20px; color: var(--muted); font-size: 15px; font-style: italic; text-align: center; }
-.recap { position: fixed; inset: 0; z-index: 300; background: var(--bg2); overflow-y: auto; padding-bottom: 40px; }
+.recap { position: fixed; inset: 0; z-index: 300; background: var(--bg2); overflow-y: auto; padding-bottom: calc(40px + env(safe-area-inset-bottom,0px)); }
 .recap-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 16px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg2); z-index: 1; }
 .recap-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.15em; color: var(--gold); }
 .recap-close { background: var(--surface2); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
@@ -486,23 +506,25 @@ body.day-mode .card-inner::after { opacity: 0.08; }
 
 <!-- ══ SETUP ══ -->
 <div id="setup">
-  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()"><span id="theme-icon">☀️</span> Jour</button>
-  <div class="brand">
-    <div class="brand-title">La Loi<br>du Milieu</div>
-    <div class="brand-rule"><span class="brand-rule-dot">◆</span></div>
-    <div class="brand-sub">Compteur d'influence · v2.3</div>
-  </div>
-  <div class="restore-banner hidden" id="restore-banner">
-    <div class="restore-banner-text">🎮 Partie en cours<br>sauvegardée</div>
-    <div class="restore-banner-btns">
-      <button class="restore-btn yes" onclick="restoreGame()">Reprendre</button>
-      <button class="restore-btn no" onclick="discardSave()">Effacer</button>
+  <div class="setup-inner">
+    <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()"><span id="theme-icon">☀️</span> Jour</button>
+    <div class="brand">
+      <div class="brand-title">La Loi<br>du Milieu</div>
+      <div class="brand-rule"><span class="brand-rule-dot">◆</span></div>
+      <div class="brand-sub">Compteur d'influence · v2.3</div>
     </div>
+    <div class="restore-banner hidden" id="restore-banner">
+      <div class="restore-banner-text">🎮 Partie en cours<br>sauvegardée</div>
+      <div class="restore-banner-btns">
+        <button class="restore-btn yes" onclick="restoreGame()">Reprendre</button>
+        <button class="restore-btn no" onclick="discardSave()">Effacer</button>
+      </div>
+    </div>
+    <div class="section-label">Choisir les Capos<br>dans l'ordre du tour<br>2 à 6 joueurs</div>
+    <div class="lt-grid" id="lt-grid"></div>
+    <button class="go-btn" id="go-btn" disabled onclick="showNamesScreen()">Démarrer la partie</button>
+    <button class="privacy-link" onclick="showPrivacy()">🔒 Confidentialité</button>
   </div>
-  <div class="section-label">Choisir les Capos<br>dans l'ordre du tour<br>2 à 6 joueurs</div>
-  <div class="lt-grid" id="lt-grid"></div>
-  <button class="go-btn" id="go-btn" disabled onclick="showNamesScreen()">Démarrer la partie</button>
-  <button class="privacy-link" onclick="showPrivacy()">🔒 Confidentialité</button>
 </div>
 
 <!-- ══ NAMES SCREEN ══ -->
