@@ -61,11 +61,11 @@ body {
   font-family: 'Cinzel', Georgia, serif;
   touch-action: manipulation;
 }
-/* Couvre les bandes safe-area iOS avec la couleur du thème */
-body::before { content:''; position:fixed; top:0; left:0; right:0; height:env(safe-area-inset-top,0px); background:#2e2418; z-index:200; }
-body::after  { content:''; position:fixed; bottom:0; left:0; right:0; height:env(safe-area-inset-bottom,0px); background:#2e2418; z-index:200; }
-body.day-mode::before { background:#f5f0e8; }
-body.day-mode::after  { background:#f5f0e8; }
+/* Couvre les bandes safe-area iOS avec la texture du thème */
+body::before { content:''; position:fixed; top:0; left:0; right:0; height:env(safe-area-inset-top,0px); background-color:#2e2418; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%23f0c040' stroke-width='0.5' stroke-opacity='0.12'/%3E%3C/svg%3E"); background-size:32px 32px; z-index:200; }
+body::after  { content:''; position:fixed; bottom:0; left:0; right:0; height:env(safe-area-inset-bottom,0px); background-color:#2e2418; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%23f0c040' stroke-width='0.5' stroke-opacity='0.12'/%3E%3C/svg%3E"); background-size:32px 32px; z-index:200; }
+body.day-mode::before { background-color:#f5f0e8; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%233d2800' stroke-width='0.6' stroke-opacity='0.18'/%3E%3C/svg%3E"); background-size:32px 32px; }
+body.day-mode::after  { background-color:#f5f0e8; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%233d2800' stroke-width='0.6' stroke-opacity='0.18'/%3E%3C/svg%3E"); background-size:32px 32px; }
 body.day-mode {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%233d2800' stroke-width='0.6' stroke-opacity='0.18'/%3E%3C/svg%3E") !important;
   background-size: 32px 32px !important;
@@ -149,9 +149,9 @@ body.day-mode .card-inner::before { opacity: 0.2; }
 
 /* Day/night toggle */
 .theme-toggle {
-  position: absolute; top: 0; right: 0;
+  position: absolute; top: calc(env(safe-area-inset-top,40px) + 34px);right: 10px;
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 20px; padding: 6px 14px; margin-top: 20px;
+  border-radius: 20px; padding: 6px 14px;
   font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.1em;
   color: var(--muted); cursor: pointer; transition: all 0.2s;
   display: flex; align-items: center; gap: 6px;
@@ -162,7 +162,8 @@ body.day-mode .card-inner::before { opacity: 0.2; }
   position: relative;
   width: 100%; max-width: 440px;
   display: flex; flex-direction: column; align-items: center;
-  padding-top: calc(env(safe-area-inset-top,44px) + 16px);
+  padding-top: calc(env(safe-area-inset-top,44px) + 34px);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* ══ SETUP ══ */
@@ -172,7 +173,7 @@ body.day-mode .card-inner::before { opacity: 0.2; }
   padding: 0 24px 24px;
   overflow-x: hidden;
 }
-.brand { text-align: center; margin-bottom: 20px; padding-top: calc(env(safe-area-inset-top,44px) + 28px); }
+.brand { text-align: center; margin-bottom: 20px; padding-top: calc(env(safe-area-inset-top,44px) + 34px); }
 .brand-title {
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(44px,12vw,64px);
@@ -224,7 +225,7 @@ body.day-mode .card-inner::before { opacity: 0.2; }
   padding: 24px 20px 24px;
   gap: 14px; overflow-x: hidden;
 }
-.names-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 6px; text-align: center; }
+.names-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 6px; text-align: center; margin-top: 34px }
 .names-sub { font-family: 'Cinzel', serif; font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 10px; text-align: center; letter-spacing: 0.05em; }
 #names-list { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; }
 .name-row { background: var(--surface); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px 14px; }
@@ -419,7 +420,7 @@ body.day-mode .card-inner::after { opacity: 0.08; }
 
 /* ══ RÈGLES ══ */
 .rules { position: fixed; inset: 0; z-index: 300; background: var(--bg2); overflow-y: auto; padding-bottom: calc(40px + env(safe-area-inset-bottom,0px)); }
-.rules-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 16px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg2); z-index: 1; }
+.rules-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 16px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg2); z-index: 1; margin-top:34px;}
 .rules-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.15em; color: var(--gold); }
 .rules-close { background: var(--surface2); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .rules-body { padding: 32px 20px; color: var(--muted); font-size: 15px; font-style: italic; text-align: center; }
@@ -513,7 +514,7 @@ body.day-mode .card-inner::after { opacity: 0.08; }
 <div id="splash">
   <div class="splash-diamond"></div>
   <div class="splash-title">La Loi du Milieu</div>
-  <div class="splash-sub">Compteur d'influence · v2.3</div>
+  <div class="splash-sub">Compteur d'influence</div>
 </div>
 
 <!-- ══ SETUP ══ -->
@@ -523,7 +524,7 @@ body.day-mode .card-inner::after { opacity: 0.08; }
     <div class="brand">
       <div class="brand-title">La Loi<br>du Milieu</div>
       <div class="brand-rule"><span class="brand-rule-dot">◆</span></div>
-      <div class="brand-sub">Compteur d'influence · v2.3</div>
+      <div class="brand-sub">Compteur d'influence</div>
     </div>
     <div class="restore-banner hidden" id="restore-banner">
       <div class="restore-banner-text">🎮 Partie en cours<br>sauvegardée</div>
@@ -1305,6 +1306,10 @@ function clearAllData() {
   document.getElementById('privacy-modal').classList.add('hidden');
   confirmReset();
 }
+ 
+  window.addEventListener('load', () => {
+    window.scrollTo({top: 0, left: 0, behavior: 'auto'});
+  });
 
 </script>
 </body>
