@@ -3,7 +3,7 @@
 //  ⚠️  Incrémenter CACHE_VERSION à chaque déploiement
 //      → invalide le cache sur tous les appareils
 // ─────────────────────────────────────────────────────────────────
-const CACHE_VERSION = 'ldm-v24';
+const CACHE_VERSION = 'ldm-v4';
 const FONTS_CACHE   = 'ldm-fonts-v1';  // polices : mise à jour rare
 
 const STATIC = [

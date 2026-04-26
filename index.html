@@ -9,6 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="favicon.png">
+<link rel="manifest" href="manifest.json">
 <script>
   if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{});
   document.addEventListener('contextmenu', e => e.preventDefault());
@@ -32,9 +33,6 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Bebas+Neue&family=Playfair+Display:wght@700&display=swap');
 
-@media screen and (orientation: landscape) and (max-width: 768px) {
-  body { transform: rotate(90deg); transform-origin: left top; width: 100vh; height: 100vw; overflow: hidden; position: absolute; top: 0; left: 100%; }
-}
 
 *, *::before, *::after {
   box-sizing: border-box; margin: 0; padding: 0;
@@ -281,16 +279,16 @@ body.day-mode .card-inner::before { opacity: 0.2; }
 .pcard.color-6 { background: var(--c6); }
 .pcard.elim { opacity: 0.38; }
 
-.card-inner { position: absolute; top: 0; left: 0; display: flex; flex-direction: column; align-items: stretch; overflow: hidden; }
+.card-inner { position: absolute; top: 0; left: 0; display: flex; flex-direction: column; align-items: stretch; overflow: hidden; z-index: 2; }
 .card-inner::before {
   content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   width: 50%; height: 2px;
   background: linear-gradient(90deg, transparent, rgba(240,192,64,0.8), transparent);
   z-index: 2; pointer-events: none;
 }
-/* Texture losanges or — mode nuit */
+/* Texture losanges or — sur .pcard (ne tourne PAS avec card-inner) */
 :root { --card-texture-ldm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%23f0c040' stroke-width='0.8'/%3E%3C/svg%3E"); }
-.card-inner::after {
+.pcard::after {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
   background-image: var(--card-texture-ldm);
   background-size: 32px 32px;
@@ -298,7 +296,7 @@ body.day-mode .card-inner::before { opacity: 0.2; }
 }
 /* Mode jour — losanges brun, plus visibles */
 body.day-mode { --card-texture-ldm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M16 2l14 14-14 14L2 16z' fill='none' stroke='%233d2800' stroke-width='1.1'/%3E%3C/svg%3E"); }
-body.day-mode .card-inner::after { opacity: 0.08; }
+body.day-mode .pcard::after { opacity: 0.08; }
 
 .rot-0 .card-inner, .rot-180 .card-inner { width: 100%; height: 100%; }
 .rot-0   .card-inner { transform: rotate(0deg); }
@@ -445,24 +443,30 @@ body.day-mode .card-inner::after { opacity: 0.08; }
 .recap-total-label { font-size: 13px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
 .recap-total-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); }
 
-/* ── MODAL SCORE (pavé numérique) ── */
+/* ── MODAL SCORE (pavé numérique) — structure identique ST ── */
 .score-modal-overlay{position:fixed;inset:0;z-index:400;background:rgba(20,14,8,0.92);display:flex;align-items:flex-end;justify-content:center;}
-.score-modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:20px 20px 36px;width:100%;max-width:420px;box-shadow:0 -8px 40px rgba(0,0,0,0.6);}
-.score-modal-handle{width:36px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
-.score-modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.12em;color:var(--gold);text-align:center;margin-bottom:4px;}
-.score-modal-player{font-family:'Cinzel',serif;font-size:13px;color:var(--muted);text-align:center;margin-bottom:14px;letter-spacing:0.05em;}
-.score-modal-display{font-family:'Bebas Neue',sans-serif;font-size:56px;text-align:center;margin-bottom:16px;line-height:1;min-height:60px;letter-spacing:0.04em;}
+.score-modal-overlay.hidden{display:none!important;}
+.score-modal-box{background:var(--surface);border:1px solid var(--border);border-radius:16px 16px 0 0;padding:0;width:100%;max-width:480px;box-shadow:0 -8px 40px rgba(0,0,0,0.5);overflow:hidden;}
+.score-modal-rotatable{padding:24px 20px 36px;transition:transform 0.15s ease;transform-origin:center center;}
+.score-modal-handle{width:40px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
+.score-modal-title{font-family:'Bebas Neue',sans-serif;font-size:18px;font-weight:700;color:var(--gold);margin-bottom:6px;text-align:center;letter-spacing:0.1em;text-transform:uppercase;}
+.score-modal-player{font-family:'Cinzel',serif;font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;letter-spacing:0.04em;}
+.score-modal-display{font-family:'Bebas Neue',sans-serif;font-size:52px;text-align:center;margin-bottom:20px;line-height:1;min-height:64px;letter-spacing:0.04em;}
 .score-modal-display.pos{color:var(--green);}
 .score-modal-display.neg{color:var(--red);}
-.score-modal-sign-row{display:flex;gap:8px;margin-bottom:12px;}
-.score-sign-btn{flex:1;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.08em;cursor:pointer;transition:all 0.15s;background:var(--surface2);color:var(--muted);}
+.score-modal-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.score-key-btn{padding:16px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:22px;cursor:pointer;transition:all 0.12s;text-align:center;}
+.score-key-btn:active{background:rgba(240,192,64,0.15);border-color:var(--gold);transform:scale(0.95);}
+.score-key-btn.del{font-size:18px;color:var(--muted);}
+.score-modal-sign-row{display:flex;gap:8px;margin-bottom:16px;}
+.score-sign-btn{flex:1;padding:14px;border:1.5px solid var(--border);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;text-align:center;letter-spacing:0.06em;text-transform:uppercase;background:var(--surface2);color:var(--muted);}
 .score-sign-btn.plus.active{background:var(--green);border-color:var(--green);color:#fff;}
 .score-sign-btn.minus.active{background:var(--red);border-color:var(--red);color:#fff;}
-.score-modal-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
-.score-key-btn{padding:15px 8px;background:var(--surface2);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.06em;cursor:pointer;transition:all 0.12s;text-align:center;}
-.score-key-btn:active{background:rgba(240,192,64,0.15);border-color:var(--gold);}
-.score-key-btn.del{font-size:18px;color:var(--muted);}
 .score-modal-confirm-row{display:flex;gap:8px;}
+.score-modal-confirm-row .modal-btn{flex:1;padding:15px;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:0.1em;text-transform:uppercase;}
+.score-modal-confirm-row .modal-btn.primary{background:transparent;color:var(--gold);border:2px solid var(--gold);}
+.score-modal-confirm-row .modal-btn.secondary{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.score-modal-confirm-row .modal-btn:active{transform:scale(0.97);}
 
 /* ── PROFILS JOUEURS ── */
 .profiles-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;width:100%;max-width:420px;}
@@ -630,18 +634,20 @@ body.day-mode .card-inner::after { opacity: 0.08; }
 <!-- MODAL SCORE -->
 <div class="score-modal-overlay hidden" id="score-modal">
   <div class="score-modal-box">
-    <div class="score-modal-handle"></div>
-    <div class="score-modal-title">Modifier l'Influence</div>
-    <div class="score-modal-player" id="score-modal-player"></div>
-    <div class="score-modal-display pos" id="score-modal-display">+0</div>
-    <div class="score-modal-sign-row">
-      <button class="score-sign-btn minus" id="sign-minus" onclick="setScoreSign(-1)">－ Perte</button>
-      <button class="score-sign-btn plus active" id="sign-plus" onclick="setScoreSign(1)">＋ Gain</button>
-    </div>
-    <div class="score-modal-keypad" id="score-modal-keypad"></div>
-    <div class="score-modal-confirm-row">
-      <button class="modal-btn secondary" onclick="closeScoreModal()">Annuler</button>
-      <button class="modal-btn primary" onclick="confirmScoreModal()">Appliquer</button>
+    <div class="score-modal-rotatable" id="score-modal-rotatable">
+      <div class="score-modal-handle"></div>
+      <div class="score-modal-title">Modifier l'Influence</div>
+      <div class="score-modal-player" id="score-modal-player"></div>
+      <div class="score-modal-display neg" id="score-modal-display">−0</div>
+      <div class="score-modal-sign-row">
+        <button class="score-sign-btn minus active" id="sign-minus" onclick="setScoreSign(-1)">－ Perte</button>
+        <button class="score-sign-btn plus" id="sign-plus" onclick="setScoreSign(1)">＋ Gain</button>
+      </div>
+      <div class="score-modal-keypad" id="score-modal-keypad"></div>
+      <div class="score-modal-confirm-row">
+        <button class="modal-btn secondary" onclick="closeScoreModal()">Annuler</button>
+        <button class="modal-btn primary" onclick="confirmScoreModal()">Appliquer</button>
+      </div>
     </div>
   </div>
 </div>
@@ -783,7 +789,11 @@ function getLayout(n) {
     case 4: return { cols:[{cards:[{idx:seatOrder[1],rot:'rot-l'},{idx:seatOrder[0],rot:'rot-l'}]},{cards:[{idx:seatOrder[2],rot:'rot-r'},{idx:seatOrder[3],rot:'rot-r'}]}], bottom:[] };
     case 5: return { cols:[{cards:[{idx:seatOrder[2],rot:'rot-l'},{idx:seatOrder[1],rot:'rot-l'}]},{cards:[{idx:seatOrder[3],rot:'rot-r'},{idx:seatOrder[4],rot:'rot-r'}]}], bottom:[{idx:seatOrder[0],rot:'rot-0'}] };
     case 6: return { cols:[{cards:[{idx:seatOrder[2],rot:'rot-l'},{idx:seatOrder[1],rot:'rot-l'},{idx:seatOrder[0],rot:'rot-l'}]},{cards:[{idx:seatOrder[3],rot:'rot-r'},{idx:seatOrder[4],rot:'rot-r'},{idx:seatOrder[5],rot:'rot-r'}]}], bottom:[] };
-    default: return null;
+    default: {
+      // Fallback générique : colonne unique rot-0
+      const cards = seatOrder.map(idx => ({idx, rot:'rot-0'}));
+      return { cols:[{cards}], bottom:[] };
+    }
   }
 }
 
@@ -902,34 +912,36 @@ function fixLateralCards() {
 }
 window.addEventListener('resize', () => { if (document.getElementById('game').style.display!=='none') { fixLateralCards(); setTimeout(fitTexts, 50); } });
 
-// Adapte les polices à la hauteur visuelle de chaque carte
 let _fitTextsRunning = false;
 function fitTexts() {
   if (_fitTextsRunning) return;
   _fitTextsRunning = true;
-  document.querySelectorAll('.pcard').forEach(card => {
-    const isLateral = card.classList.contains('rot-l') || card.classList.contains('rot-r');
-    const inner = card.querySelector('.card-inner');
-    let cardH, cardW;
-    if (isLateral && inner && inner.offsetWidth > 0) {
-      cardH = inner.offsetWidth;
-      cardW = inner.offsetHeight;
-    } else {
-      cardH = card.offsetHeight;
-      cardW = card.offsetWidth;
-    }
-    if (cardH <= 0 || cardW <= 0) return;
-    const ref = Math.min(cardH, cardW);
-    const pname   = card.querySelector('.pname');
-    const prole   = card.querySelector('.prole');
-    const pplayer = card.querySelector('.pplayer');
-    const score   = card.querySelector('.score');
-    if (pname)   pname.style.fontSize   = (ref * 0.12) + 'px';
-    if (prole)   prole.style.fontSize   = (ref * 0.06) + 'px';
-    if (pplayer) pplayer.style.fontSize = (ref * 0.15) + 'px';
-    if (score)   score.style.fontSize   = (ref * 0.32) + 'px';
-  });
-  _fitTextsRunning = false;
+  try {
+    document.querySelectorAll('.pcard').forEach(card => {
+      const isLateral = card.classList.contains('rot-l') || card.classList.contains('rot-r');
+      const inner = card.querySelector('.card-inner');
+      let cardH, cardW;
+      if (isLateral && inner && inner.offsetWidth > 0) {
+        cardH = inner.offsetWidth;
+        cardW = inner.offsetHeight;
+      } else {
+        cardH = card.offsetHeight;
+        cardW = card.offsetWidth;
+      }
+      if (cardH <= 0 || cardW <= 0) return;
+      const ref = Math.min(cardH, cardW);
+      const pname   = card.querySelector('.pname');
+      const prole   = card.querySelector('.prole');
+      const pplayer = card.querySelector('.pplayer');
+      const score   = card.querySelector('.score');
+      if (pname)   pname.style.fontSize   = (ref * 0.12) + 'px';
+      if (prole)   prole.style.fontSize   = (ref * 0.06) + 'px';
+      if (pplayer) pplayer.style.fontSize = (ref * 0.15) + 'px';
+      if (score)   score.style.fontSize   = (ref * 0.32) + 'px';
+    });
+  } finally {
+    _fitTextsRunning = false;
+  }
 }
 
 function flashZone(zone, cls) { zone.classList.add(cls); setTimeout(()=>zone.classList.remove(cls),220); }
@@ -1123,6 +1135,9 @@ function showRecap() {
 function backToSetup() { document.getElementById('names-screen').style.display='none'; document.getElementById('setup').style.display='flex'; }
 
 function confirmReset() {
+  // Nettoyer les timers orphelins avant de vider l'état
+  Object.values(groupTimers).forEach(clearTimeout);
+  groupTimers = {};
   localStorage.removeItem(SAVE_KEY);
   ['reset-modal','winner','recap','score-modal','privacy-modal'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.add('hidden'); });
   document.getElementById('game').style.display='none';
@@ -1231,18 +1246,80 @@ function openScoreModal(pi) {
   const openGroup = history.find(h => h.playerIdx === pi && h.open);
   if (openGroup) { openGroup.open = false; if (groupTimers[pi]) { clearTimeout(groupTimers[pi]); delete groupTimers[pi]; } }
   const p = players[pi];
-  _modalPlayerIdx = pi; _modalValue = '0'; _modalSign = 1;
+  _modalPlayerIdx = pi; _modalValue = '0'; _modalSign = -1;
   document.getElementById('score-modal-player').textContent =
-    (p.playerName ? `${p.playerName} · ` : '') + p.name + ' — ' + p.inf + ' Influence';
+    (p.playerName ? p.playerName + ' · ' : '') + p.name + ' — ' + p.inf + ' Influence';
   updateScoreModalDisplay();
-  document.getElementById('sign-plus').classList.add('active');
-  document.getElementById('sign-minus').classList.remove('active');
-  document.getElementById('score-modal').classList.remove('hidden');
+  setScoreSign(-1);
+
+  const card = document.getElementById('card-' + pi);
+  const rot  = card ? (['rot-l','rot-r','rot-180'].find(r => card.classList.contains(r)) || 'rot-0') : 'rot-0';
+  const overlay = document.getElementById('score-modal');
+  const rotEl   = document.getElementById('score-modal-rotatable');
+  const box     = overlay.querySelector('.score-modal-box');
+
+  overlay.removeAttribute('style');
+  if (rotEl) rotEl.removeAttribute('style');
+  if (box)   box.removeAttribute('style');
+
+  if (rot === 'rot-180') {
+    overlay.style.alignItems = 'flex-start';
+    if (rotEl) rotEl.style.transform = 'rotate(180deg)';
+  } else if (rot === 'rot-l' || rot === 'rot-r') {
+    const vw = window.innerWidth;
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const deg = rot === 'rot-l' ? 90 : -90;
+    overlay.style.position        = 'fixed';
+    overlay.style.width           = vh + 'px';
+    overlay.style.height          = vw + 'px';
+    overlay.style.top             = ((vh - vw) / 2) + 'px';
+    overlay.style.left            = ((vw - vh) / 2) + 'px';
+    overlay.style.transform       = 'rotate(' + deg + 'deg)';
+    overlay.style.transformOrigin = 'center center';
+    overlay.style.alignItems      = 'flex-end';
+    overlay.style.justifyContent  = 'center';
+    if (box) {
+      box.style.width     = vw + 'px';
+      box.style.maxWidth  = vw + 'px';
+      box.style.maxHeight = vw + 'px';
+      box.style.overflowY = 'auto';
+    }
+    if (rotEl) rotEl.style.padding = '6px 12px 12px';
+    const handle    = overlay.querySelector('.score-modal-handle');
+    const title     = overlay.querySelector('.score-modal-title');
+    const player    = overlay.querySelector('.score-modal-player');
+    const scoreDisp = overlay.querySelector('.score-modal-display');
+    const signRow   = overlay.querySelector('.score-modal-sign-row');
+    const keypad    = overlay.querySelector('.score-modal-keypad');
+    if (handle)    handle.style.marginBottom = '4px';
+    if (title)     title.style.marginBottom  = '2px';
+    if (player)    player.style.marginBottom = '4px';
+    if (scoreDisp) { scoreDisp.style.fontSize = '28px'; scoreDisp.style.marginBottom = '4px'; scoreDisp.style.minHeight = '34px'; }
+    if (signRow)   signRow.style.marginBottom = '4px';
+    if (keypad)    keypad.style.marginBottom  = '8px';
+    overlay.querySelectorAll('.score-key-btn').forEach(k => { k.style.padding = '8px 4px'; k.style.fontSize = '18px'; });
+    overlay.querySelectorAll('.score-modal-confirm-row .modal-btn').forEach(b => { b.style.padding = '10px'; });
+    overlay.querySelectorAll('.score-sign-btn').forEach(b => { b.style.padding = '10px'; });
+  }
+
+  overlay.classList.remove('hidden');
 }
-function closeScoreModal() { document.getElementById('score-modal').classList.add('hidden'); }
+function closeScoreModal() {
+  const overlay = document.getElementById('score-modal');
+  overlay.classList.add('hidden');
+  overlay.removeAttribute('style');
+  const rotEl = document.getElementById('score-modal-rotatable');
+  if (rotEl) rotEl.removeAttribute('style');
+  const box = overlay.querySelector('.score-modal-box');
+  if (box) box.removeAttribute('style');
+  overlay.querySelectorAll('.score-key-btn,.score-modal-confirm-row .modal-btn,.score-sign-btn').forEach(el => el.removeAttribute('style'));
+  ['.score-modal-title','.score-modal-player','.score-modal-display',
+   '.score-modal-handle','.score-modal-sign-row','.score-modal-keypad','.score-modal-confirm-row']
+    .forEach(sel => { const el = overlay.querySelector(sel); if (el) el.removeAttribute('style'); });
+}
 function setScoreSign(s) {
   _modalSign = s;
-  document.getElementById('sign-plus').classList.toggle('active', s === 1);
+  document.getElementById('sign-plus').classList.toggle('active',  s === 1);
   document.getElementById('sign-minus').classList.toggle('active', s === -1);
   updateScoreModalDisplay();
 }
@@ -1250,7 +1327,7 @@ function pressScoreKey(k) {
   if (k === '⌫') _modalValue = _modalValue.length > 1 ? _modalValue.slice(0, -1) : '0';
   else if (k === '00') _modalValue = _modalValue === '0' ? '0' : _modalValue + '00';
   else _modalValue = _modalValue === '0' ? String(k) : _modalValue + k;
-  if (_modalValue.length > 3) _modalValue = _modalValue.slice(0, 3); // max 40
+  if (_modalValue.length > 3) _modalValue = _modalValue.slice(0, 3);
   updateScoreModalDisplay();
 }
 function updateScoreModalDisplay() {
@@ -1268,9 +1345,8 @@ function confirmScoreModal() {
   const prev = p.inf;
   p.inf = Math.min(MAX, Math.max(0, p.inf + delta));
   const realDelta = p.inf - prev;
-  // Si realDelta === 0 mais que p.inf est à 0 et le joueur pas éliminé, on continue quand même
   if (realDelta === 0 && !(p.inf <= 0 && !p.eliminated)) { closeScoreModal(); return; }
-  const sc = document.getElementById(`sc-${_modalPlayerIdx}`);
+  const sc = document.getElementById('sc-' + _modalPlayerIdx);
   if (sc) { sc.textContent = p.inf; sc.className = 'score' + (p.inf <= 8 ? ' crit' : p.inf <= 15 ? ' low' : '') + (p.inf <= 8 && !p.eliminated ? ' crit-blink' : ''); }
   if (realDelta !== 0) {
     flashDelta(_modalPlayerIdx, realDelta);

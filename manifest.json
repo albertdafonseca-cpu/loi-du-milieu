@@ -1,7 +1,7 @@
 {
   "name": "La Loi du Milieu",
-  "short_name": "Loi du Milieu",
-  "description": "Compteur d'influence pour La Loi du Milieu",
+  "short_name": "LDM",
+  "description": "Compteur d'Influence — La Loi du Milieu",
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
