@@ -138,11 +138,13 @@ test.describe('Undo', () => {
 });
 
 // ── Thème jour / nuit ─────────────────────────────────────────────────────────
-test.describe('Bascule de thème', () => {
+// Le bouton de thème (#theme-btn) est à l'intérieur de #setup et devient
+// inaccessible pendant la partie. Les tests de thème se font donc depuis
+// l'écran de configuration.
+test.describe('Bascule de thème (depuis le setup)', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.waitForSelector('.lt-pick');
-    await startGameWithNames(page, ['Alice', 'Bob']);
+    await page.waitForSelector('#theme-btn');
   });
 
   test('active la classe day-mode sur le body', async ({ page }) => {
@@ -154,6 +156,19 @@ test.describe('Bascule de thème', () => {
     await page.locator('#theme-btn').click();
     await page.locator('#theme-btn').click();
     await expect(page.locator('body')).not.toHaveClass(/day-mode/);
+  });
+
+  test('le thème persiste au démarrage de la partie', async ({ page }) => {
+    await page.locator('#theme-btn').click();
+    await expect(page.locator('body')).toHaveClass(/day-mode/);
+    // Démarrer une partie
+    await page.locator('.lt-pick').nth(0).click();
+    await page.locator('.lt-pick').nth(1).click();
+    await page.locator('#go-btn').click();
+    await page.locator('.names-go-btn').click();
+    await page.waitForSelector('#game', { state: 'visible' });
+    // Le thème est toujours actif pendant la partie
+    await expect(page.locator('body')).toHaveClass(/day-mode/);
   });
 });
 
