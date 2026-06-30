@@ -21,8 +21,16 @@ async function startGameWithNames(page, names = ['Alice', 'Bob']) {
   await page.waitForSelector('#game', { state: 'visible' });
 }
 
+// Sélecteurs de la barre d'action — on utilise l'attribut onclick (ASCII pur)
+// pour éviter tout problème d'encodage avec les caractères accentués/emoji.
+const BAR_SELECTORS = {
+  'Rotation': '#bar [onclick*="rotatePlayers"]',
+  'Récap':    '#bar [onclick*="showRecap"]',
+  'Règles':   '#bar [onclick*="showRules"]',
+  'Reset':    '#bar .bar-btn.danger',
+};
 function barBtn(page, label) {
-  return page.locator('#bar .bar-btn').filter({ hasText: label });
+  return page.locator(BAR_SELECTORS[label]);
 }
 
 // ── Écran Noms ────────────────────────────────────────────────────────────────
