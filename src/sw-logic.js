@@ -1,6 +1,6 @@
 // Logique pure du service worker, découplée de l'API `self` pour être testable.
 
-export const STATIC_ASSETS = ['./', './index.html', './manifest.json', './favicon.png'];
+export const STATIC_ASSETS = ['./', './index.html', './src/game-logic.js', './manifest.json', './favicon.png'];
 export const FONT_HOSTS    = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
 /** Retourne true si l'URL appartient à un hôte de polices Google. */

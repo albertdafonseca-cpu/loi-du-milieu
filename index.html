@@ -16,7 +16,7 @@
   document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
   // Service Worker — fonctionnement hors ligne + mise à jour automatique
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw-ldm.js').catch(()=>{});
+    navigator.serviceWorker.register('./sw-ldm.js', { type: 'module' }).catch(()=>{});
     navigator.serviceWorker.addEventListener('message', e => {
       if (e.data?.type === 'SW_UPDATED') {
         const b = document.createElement('div');

@@ -55,4 +55,8 @@ describe('STATIC_ASSETS', () => {
   it('inclut favicon.png', () => {
     expect(STATIC_ASSETS).toContain('./favicon.png');
   });
+
+  it('inclut src/game-logic.js', () => {
+    expect(STATIC_ASSETS).toContain('./src/game-logic.js');
+  });
 });
