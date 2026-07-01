@@ -9,6 +9,7 @@ const FONTS_CACHE   = 'ldm-fonts-v1';  // polices : mise à jour rare
 const STATIC = [
   './',
   './index.html',
+  './src/game-logic.js',
   './manifest.json',
   './favicon.png',
 ];

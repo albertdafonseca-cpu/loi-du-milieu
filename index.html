@@ -684,26 +684,23 @@ body.day-mode .pcard::after { opacity: 0.08; }
   </div>
 </div>
 
-<script>
-// ── Données des capos, triés alphabétiquement par nom ──
-const LTS = [
-  { id:'ricciardo',  name:'Antonio Ricciardo', role:'Le Sage' },
-  { id:'russo',      name:'Carmela Russo',     role:'La Faussaire' },
-  { id:'caruso',     name:'Domenico Caruso',   role:'Le Molosse' },
-  { id:'emancini',   name:'Elena Mancini',     role:'La Tigresse' },
-  { id:'romano',     name:'Enzo Romano',       role:'Le Joueur' },
-  { id:'fdeluca',    name:'Francesca De Luca', role:'La Diplomate' },
-  { id:'ghost',      name:'Ghost',             role:"L'Ombre" },
-  { id:'gvendetta',  name:'Giulia Vendetta',   role:"L'Œil du Faucon" },
-  { id:'imoretti',   name:'Isabella Moretti',  role:'La Vipère' },
-  { id:'lvitale',    name:'Lorenzo Vitale',    role:'Le Marteau' },
-  { id:'belladonna', name:'Rosa Belladonna',   role:'La Sirène' },
-  { id:'smancini',   name:'Salvatore Mancini', role:'Le Loup' },
-];
+<script type="module">
+import {
+  MAX, GROUP_DELAY, LTS, SAVE_KEY, PROFILES_KEY,
+  createGameState,
+  getLayout,
+  rotateSeatOrder,
+  scoreClass,
+  getWinner,
+  pushUndo, popUndo,
+  logGrouped as logGroupedPure,
+  groupSum,
+  pressKey,
+  mergeProfiles, deleteProfileFromList,
+  shuffle,
+  serializeGame, deserializeGame,
+} from './src/game-logic.js';
 
-const MAX = 40, GROUP_DELAY = 1500;
-const SAVE_KEY = 'ldm_save';
-const PROFILES_KEY = 'ldm_profiles';
 let selected = new Set(), players=[], undoStack=[], history=[], groupTimers={}, lastUndoTime={};
 let seatOrder = []; // indices dans players[], dans l'ordre des sièges
 let actionCounter = 0; // compteur global d'actions
@@ -759,11 +756,10 @@ function showNamesScreen() {
 
 function startGame() {
   const inputs = document.querySelectorAll('.name-input');
-  players = [...selected].map((id, i) => {
-    const lt = LTS.find(l => l.id === id);
-    return { id: lt.id, name: lt.name, role: lt.role, playerName: inputs[i]?.value.trim()||'', inf: MAX, eliminated: false };
-  });
-  seatOrder = players.map((_,i) => i);
+  const selectedIds = [...selected];
+  const playerNames = selectedIds.map((_, i) => inputs[i]?.value.trim() || '');
+  const state = createGameState(selectedIds, playerNames);
+  players = state.players; seatOrder = state.seatOrder;
   undoStack=[]; history=[]; groupTimers={}; lastUndoTime={}; actionCounter=0;
   document.getElementById('names-screen').style.display='none';
   document.getElementById('game').style.display='flex';
@@ -776,25 +772,8 @@ function startGame() {
 function rotatePlayers() {
   if (players.length < 2) return;
   saveUndo();
-  // Décale d'un cran dans le sens horaire : le dernier devient le premier
-  const last = seatOrder.pop();
-  seatOrder.unshift(last);
+  seatOrder = rotateSeatOrder(seatOrder);
   renderGame();
-}
-
-// ── Layout ──
-function getLayout(n) {
-  switch(n) {
-    case 3: return { cols:[{cards:[{idx:seatOrder[1],rot:'rot-l'}]},{cards:[{idx:seatOrder[2],rot:'rot-r'}]}], bottom:[{idx:seatOrder[0],rot:'rot-0'}] };
-    case 4: return { cols:[{cards:[{idx:seatOrder[1],rot:'rot-l'},{idx:seatOrder[0],rot:'rot-l'}]},{cards:[{idx:seatOrder[2],rot:'rot-r'},{idx:seatOrder[3],rot:'rot-r'}]}], bottom:[] };
-    case 5: return { cols:[{cards:[{idx:seatOrder[2],rot:'rot-l'},{idx:seatOrder[1],rot:'rot-l'}]},{cards:[{idx:seatOrder[3],rot:'rot-r'},{idx:seatOrder[4],rot:'rot-r'}]}], bottom:[{idx:seatOrder[0],rot:'rot-0'}] };
-    case 6: return { cols:[{cards:[{idx:seatOrder[2],rot:'rot-l'},{idx:seatOrder[1],rot:'rot-l'},{idx:seatOrder[0],rot:'rot-l'}]},{cards:[{idx:seatOrder[3],rot:'rot-r'},{idx:seatOrder[4],rot:'rot-r'},{idx:seatOrder[5],rot:'rot-r'}]}], bottom:[] };
-    default: {
-      // Fallback générique : colonne unique rot-0
-      const cards = seatOrder.map(idx => ({idx, rot:'rot-0'}));
-      return { cols:[{cards}], bottom:[] };
-    }
-  }
 }
 
 // ── Rendu ──
@@ -815,7 +794,7 @@ function renderGame() {
     return;
   }
 
-  const layout = getLayout(n);
+  const layout = getLayout(n, seatOrder);
   if (layout.cols && layout.cols.length > 0) {
     const mainRow = document.createElement('div');
     const sidesRatio = (n === 3 || n === 5) ? 2 : 1;
@@ -853,8 +832,8 @@ function buildCard(playerIdx, rot) {
   inner.className = 'card-inner';
   inner.id = `inner-${playerIdx}`;
 
-  const critCls = (p.inf<=8&&!p.eliminated)?' crit-blink':'';
-  const cls = p.inf<=8?'crit':p.inf<=15?'low':'';
+  const cls = scoreClass(p.inf, p.eliminated);
+  const scoreCls = 'score' + (cls ? ' ' + cls : '');
   const playerNameHtml = p.playerName
     ? `<div class="pplayer">${p.playerName}</div>`
     : `<span class="pplayer-ghost"></span>`;
@@ -867,7 +846,7 @@ function buildCard(playerIdx, rot) {
     <div class="prole">${p.role}</div>
     ${playerNameHtml}
     <div class="score-wrap">
-      <span class="score ${cls}${critCls}" id="sc-${playerIdx}">${p.inf}</span>
+      <span class="${scoreCls}" id="sc-${playerIdx}">${p.inf}</span>
       <span class="delta-flash" id="df-${playerIdx}"></span>
     </div>
     <span class="tap-sign-minus">－</span>
@@ -955,7 +934,7 @@ function adjust(i, delta, zone, flashCls) {
   // Si delta === 0 mais p.inf est à 0 sans élimination, laisser passer pour déclencher l'élim
   if (delta === 0 && !(p.inf <= 0 && !p.eliminated)) return;
   const sc = document.getElementById(`sc-${i}`);
-  if (sc) { sc.textContent=p.inf; sc.className='score'+(p.inf<=8?' crit':p.inf<=15?' low':'')+(p.inf<=8&&!p.eliminated?' crit-blink':''); }
+  if (sc) { const c = scoreClass(p.inf, p.eliminated); sc.textContent=p.inf; sc.className='score'+(c?' '+c:''); }
   const card = document.getElementById(`card-${i}`);
   if (card && !p.eliminated) { card.classList.remove('crit-blink'); }
   if (delta !== 0) { flashZone(zone, flashCls||(delta>0?'flash-pos':'flash-neg')); logGrouped(i,delta); }
@@ -995,7 +974,7 @@ function showKillerModal(eliminatedIdx) {
       const gained = p.inf - prev;
       if (gained > 0) {
         const sc = document.getElementById(`sc-${realIdx}`);
-        if (sc) { sc.textContent = p.inf; sc.className = 'score' + (p.inf<=8?' crit':p.inf<=15?' low':'') + (p.inf<=8?' crit-blink':''); }
+        if (sc) { const c = scoreClass(p.inf, p.eliminated); sc.textContent = p.inf; sc.className = 'score' + (c ? ' ' + c : ''); }
         flashDelta(realIdx, gained);
         logGrouped(realIdx, gained);
       }
@@ -1032,20 +1011,13 @@ function flashDelta(i, groupSum) {
 
 // ── Historique — chaque groupe a un rang d'action global ──
 function logGrouped(playerIdx, delta) {
-  const p = players[playerIdx]; const now = Date.now();
-  let group = history.find(h => h.playerIdx===playerIdx && h.open);
+  const p = players[playerIdx];
   const displayName = p.playerName ? `${p.playerName} (${p.name})` : p.name;
-  if (!group) {
-    actionCounter++;
-    group = { playerIdx, who:displayName, role:p.role, entries:[], open:true, rank:actionCounter };
-    history.unshift(group);
-  }
-  group.entries.push({ delta, ts:now });
-  // Afficher le cumul du groupe en cours
-  const sum = group.entries.reduce((s, e) => s + e.delta, 0);
-  flashDelta(playerIdx, sum);
+  ({ history, actionCounter } = logGroupedPure(history, actionCounter, playerIdx, delta, displayName, p.role));
+  const group = history.find(h => h.playerIdx === playerIdx && h.open);
+  flashDelta(playerIdx, groupSum(group));
   if (groupTimers[playerIdx]) clearTimeout(groupTimers[playerIdx]);
-  groupTimers[playerIdx] = setTimeout(()=>{ group.open=false; }, GROUP_DELAY);
+  groupTimers[playerIdx] = setTimeout(() => { group.open = false; }, GROUP_DELAY);
 }
 
 // ── Undo : clic simple + appui long continu ──
@@ -1067,28 +1039,27 @@ function logGrouped(playerIdx, delta) {
 })();
 
 function saveUndo() {
-  undoStack.push(JSON.stringify({ players, history, seatOrder, actionCounter }));
-  if (undoStack.length>30) undoStack.shift();
-  document.getElementById('undo-btn').disabled=false;
+  undoStack = pushUndo(undoStack, { players, history, seatOrder, actionCounter });
+  document.getElementById('undo-btn').disabled = false;
 }
 
 function undoLast() {
-  if (!undoStack.length) return;
-  const snap = JSON.parse(undoStack.pop());
-  players=snap.players; history=snap.history; seatOrder=snap.seatOrder; actionCounter=snap.actionCounter;
-  document.getElementById('undo-btn').disabled=undoStack.length===0;
+  const result = popUndo(undoStack);
+  if (!result) return;
+  ({ players, history, seatOrder, actionCounter } = result.state);
+  undoStack = result.undoStack;
+  document.getElementById('undo-btn').disabled = undoStack.length === 0;
   renderGame();
 }
 
 function checkWinner() {
-  const alive = players.filter(p=>!p.eliminated);
-  if (alive.length!==1) return;
-  setTimeout(()=>{
-    const w=alive[0];
-    document.getElementById('winner-name').textContent=w.playerName||w.name;
-    document.getElementById('winner-role').textContent=w.playerName?`${w.name} · ${w.role}`:w.role;
+  const w = getWinner(players);
+  if (!w) return;
+  setTimeout(() => {
+    document.getElementById('winner-name').textContent = w.playerName || w.name;
+    document.getElementById('winner-role').textContent = w.playerName ? `${w.name} · ${w.role}` : w.role;
     document.getElementById('winner').classList.remove('hidden');
-  },500);
+  }, 500);
 }
 
 function showRules() { document.getElementById('rules').classList.remove('hidden'); }
@@ -1153,14 +1124,12 @@ function confirmReset() {
 // ── SAUVEGARDE DE PARTIE ──────────────────────────────────────────
 function saveGame() {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({
-      players, seatOrder, history, actionCounter, ts: Date.now()
-    }));
+    localStorage.setItem(SAVE_KEY, serializeGame({ players, seatOrder, history, actionCounter }));
   } catch(e) {}
 }
 function restoreGame() {
   try {
-    const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+    const s = deserializeGame(localStorage.getItem(SAVE_KEY));
     if (!s) return;
     players = s.players; seatOrder = s.seatOrder; history = s.history; actionCounter = s.actionCounter;
     undoStack = []; groupTimers = {};
@@ -1188,11 +1157,9 @@ function loadProfiles() {
 }
 function saveProfiles() {
   const inputs = document.querySelectorAll('.name-input');
-  const names = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
-  if (!names.length) return;
-  let profiles = loadProfiles();
-  names.forEach(n => { if (!profiles.includes(n)) profiles.push(n); });
-  if (profiles.length > 30) profiles = profiles.slice(-30);
+  const names = Array.from(inputs).map(i => i.value.trim());
+  if (!names.filter(Boolean).length) return;
+  const profiles = mergeProfiles(loadProfiles(), names);
   localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
   renderProfileChips();
 }
@@ -1220,7 +1187,7 @@ function fillProfileName(name) {
   if (empty) { empty.value = name; empty.focus(); }
 }
 function deleteProfile(name) {
-  const profiles = loadProfiles().filter(p => p !== name);
+  const profiles = deleteProfileFromList(loadProfiles(), name);
   localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
   renderProfileChips();
 }
@@ -1234,8 +1201,7 @@ function clearNameInputs() {
 }
 function shuffleNames() {
   const inputs = [...document.querySelectorAll('.name-input')];
-  const vals = inputs.map(i => i.value);
-  for (let i = vals.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [vals[i], vals[j]] = [vals[j], vals[i]]; }
+  const vals = shuffle(inputs.map(i => i.value));
   inputs.forEach((inp, i) => inp.value = vals[i]);
 }
 
@@ -1324,10 +1290,7 @@ function setScoreSign(s) {
   updateScoreModalDisplay();
 }
 function pressScoreKey(k) {
-  if (k === '⌫') _modalValue = _modalValue.length > 1 ? _modalValue.slice(0, -1) : '0';
-  else if (k === '00') _modalValue = _modalValue === '0' ? '0' : _modalValue + '00';
-  else _modalValue = _modalValue === '0' ? String(k) : _modalValue + k;
-  if (_modalValue.length > 3) _modalValue = _modalValue.slice(0, 3);
+  _modalValue = pressKey(_modalValue, k);
   updateScoreModalDisplay();
 }
 function updateScoreModalDisplay() {
@@ -1347,7 +1310,7 @@ function confirmScoreModal() {
   const realDelta = p.inf - prev;
   if (realDelta === 0 && !(p.inf <= 0 && !p.eliminated)) { closeScoreModal(); return; }
   const sc = document.getElementById('sc-' + _modalPlayerIdx);
-  if (sc) { sc.textContent = p.inf; sc.className = 'score' + (p.inf <= 8 ? ' crit' : p.inf <= 15 ? ' low' : '') + (p.inf <= 8 && !p.eliminated ? ' crit-blink' : ''); }
+  if (sc) { const c = scoreClass(p.inf, p.eliminated); sc.textContent = p.inf; sc.className = 'score' + (c ? ' ' + c : ''); }
   if (realDelta !== 0) {
     flashDelta(_modalPlayerIdx, realDelta);
     actionCounter++;
@@ -1387,6 +1350,12 @@ function clearAllData() {
     window.scrollTo({top: 0, left: 0, behavior: 'auto'});
   });
 
+Object.assign(window, {
+  toggleTheme, restoreGame, discardSave, showNamesScreen, showPrivacy,
+  shuffleNames, saveProfiles, clearSavedNames, startGame, clearNameInputs,
+  backToSetup, rotatePlayers, showRecap, showRules, confirmReset,
+  setScoreSign, closeScoreModal, confirmScoreModal, clearAllData, deleteProfile,
+});
 </script>
 </body>
 </html>
