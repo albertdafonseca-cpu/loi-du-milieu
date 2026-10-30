@@ -23,6 +23,11 @@ ligne), `manifest.json`, `favicon.png`.
   clignotement (`crit-blink`) ; garder un repère non coloré en plus de toute
   teinte ajoutée. Thème sombre et thème jour (`body.day-mode`, `toggleTheme`) :
   vérifier les deux.
+  Après tout changement d'interface (CSS, couleurs, états, graphiques), lancer
+  le sous-agent **`relecteur-daltonisme`**
+  (`.claude/agents/relecteur-daltonisme.md`) avant de pousser :
+  il signale, en lecture seule, ce qu'un daltonien ne peut pas lire ;
+  la session corrige.
 - Pensé pour un téléphone tenu en **portrait**, posé au centre de la table :
   les cartes latérales sont tournées (`getLayout`, `rot-l` / `rot-r`). Vérifier
   tout changement d'affichage de 3 à 6 joueurs.
