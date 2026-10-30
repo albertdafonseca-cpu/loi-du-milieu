@@ -38,8 +38,8 @@ ligne), `manifest.json`, `favicon.png`.
   en cache. Le service worker prévient alors l'app (`SW_UPDATED`), qui affiche
   « Mise à jour disponible ». Un fichier ajouté au site doit aussi entrer dans
   `STATIC`.
-- Le `.gitignore` est celui de Vercel (`.vercel`, `.env*.local`) : le site y
-  est hébergé, déployé depuis `main` (à confirmer par l'utilisateur).
+- Le site est hébergé sur **Vercel** et **publié depuis `main`** (confirmé par
+  l'utilisateur le 30/10/2026) : fusionner, c'est mettre en ligne.
 - Sans build, Vercel publie le dossier tel quel : `.vercelignore` en retire
   `CLAUDE.md` et `.claude/`. Tout nouveau fichier qui n'est pas du site s'y
   ajoute.
